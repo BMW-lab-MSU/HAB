@@ -7,19 +7,13 @@ import adafruit_gps
 import serial
 
 #This function searches for all cameras and outputs [cameras, names] and takes an input of the expected length
-def find_cameras(expected_length):
+def find_cameras():
     cams = []
     Names = []
-    if len(simple_pyspin.list_cameras()) != expected_length:
-        print("did not find all cameras, searching...")
-        time.sleep(0.5)
-        [cams,Names]=find_cameras(expected_length)
-        return(cams,Names)
-    else:
-        for i in range(len(simple_pyspin.list_cameras())):
-            cams = np.append(Camera(i),cams)
-            Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
-        return(cams,Names)
+    for i in range(len(simple_pyspin.list_cameras())):
+        cams = np.append(Camera(i),cams)
+        Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
+    return(cams,Names)
 
 
 #This function initializes the cameras to have the desired parameters
@@ -67,7 +61,10 @@ def Initialize_camera(cam):
     cam.AutoExposureControlPriority = 'Gain'
 
     cam.ChunkModeActive = False
-
+    try:
+        cam.PixelFormat = "Mono16"
+    except:
+        pass
 
 
 def GPS(gps):
