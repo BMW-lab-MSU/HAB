@@ -49,7 +49,16 @@ print("init_time:",time.time()-starttime)
 
 # Make a directory to save some images
 # It is set up such that a new folder with the date/flight# is created
-output_dir = str(date.today())
+#first the gps is used to see if it can find the current date
+time.sleep(10)
+if gps.has_fix:
+    Date = gps.timestamp_utc
+    Date = TIME[:-3]
+    Date = "-".join([str(i) for i in Date])
+    Date = Date[:-9]
+    output_dir = Date
+else:
+    output_dir = str(date.today())
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 flights = os.listdir(output_dir)
