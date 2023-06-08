@@ -11,56 +11,52 @@ def find_cameras():
     cams = []
     Names = []
     for i in range(len(simple_pyspin.list_cameras())):
-        cams = np.append(Camera(i),cams)
+        cams = np.append(cams,Camera(i))
         Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
     return(cams,Names)
 
 
 #This function initializes the cameras to have the desired parameters
-def Initialize_camera(cam):
+def Initialize_camera(cam,gain,exposureTime):
     cam.stop()
-    #cam.close()
     cam.init()
-    #print("camera pixel format is", cam.PixelFormat)
 
     # To change the frame rate, we need to enable manual control
     cam.AcquisitionFrameRateEnable = True
     cam.AcquisitionFrameRate = 1
 
-    cam.AcquisitionMode = 'Continuous'
+    if cam.AcquisitionMode != 'Continuous':
+        cam.AcquisitionMode = 'Continuous'
 
     # To control the exposure settings, we need to turn off auto
-    cam.GainAuto = 'Continuous'
-    # Set the gain to 20 dB or the maximum of the camera.
-    #gain = min(0, cam.get_info('Gain')['max'])
-    #print("Setting gain to %.1f dB" % gain)
-    #cam.Gain = gain
-    cam.ExposureAuto = 'Continuous'
-    #cam.ExposureTime = int(exposureTime) # microseconds
+    cam.GainAuto = "Off"
+    cam.Gain = gain
+    cam.ExposureAuto = 'Off'
+    cam.ExposureTime = exposureTime # microseconds
 
     #print("Exposure Time: ", cam.ExposureTime)     
 
     #cam.BalanceWhiteAuto = 'Off'
 
     #cam.SharpeningAuto = False
-
-    cam.GammaEnable = False
-
-    cam.BlackLevelClampingEnable = False
+    if cam.GammaEnable:
+        cam.GammaEnable = False
+    if cam.BlackLevelClampingEnable:
+        cam.BlackLevelClampingEnable = False
 
     #cam.SaturationEnable = False
 
     #cam.AasRoiEnable = False
-
-    cam.AutoExposureTargetGreyValueAuto = 'Off'
+    if cam.AutoExposureTargetGreyValueAuto != 'Off':
+        cam.AutoExposureTargetGreyValueAuto = 'Off'
 
     #cam.AutoExposureMeteringMode = 'Average'
+    if cam.AutoExposureControlLoopDamping != 0.2:
+        cam.AutoExposureControlLoopDamping = 0.2
 
-    cam.AutoExposureControlLoopDamping = 0.2
-
-    cam.AutoExposureControlPriority = 'Gain'
-
-    cam.ChunkModeActive = False
+    #cam.AutoExposureControlPriority = 'Gain'
+    if cam.ChunkModeActive:
+        cam.ChunkModeActive = Falses
     try:
         cam.PixelFormat = "Mono16"
     except:

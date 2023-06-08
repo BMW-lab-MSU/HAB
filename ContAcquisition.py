@@ -12,34 +12,38 @@ import adafruit_gps
 import serial
 import csv
 
+#gain and exposure time for the cameras
+serial_numbs = ["58","72","73"]
+gain = [0,0,0]
+exposure_time = [3503,3503,3503] #microseconds
+
+
 
 #GPS initialization
-uart = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=3000)
+uart = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=None)
 gps = adafruit_gps.GPS(uart, debug=False)
 gps.send_command(b'PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0') # Turn off everything:
 gps.send_command(b'PMTK220,1000')
 
 
-
-#Entering the exposure time desired in ms
-exposureTime = "10003"
-
-
-
 #entering the time between taking images (seconds)
 imageInterval = "1"
 
-
-#initialize the cameras and set settings
 starttime = time.time()
+#initialize the cameras and set settings
 [cams,CamNames] = HAB_functions.find_cameras()
+
 for cam in cams:
     cam.stop()
     cam.close()
 
 [cams,CamNames] = HAB_functions.find_cameras()
-for cam in cams:
-    HAB_functions.Initialize_camera(cam)
+for i in range(len(cams)):
+    print(CamNames[i][-2:])
+    for j in range(len(serial_numbs)):
+        if serial_numbs[j] == CamNames[i][-2:]:
+            print("init")
+            HAB_functions.Initialize_camera(cams[i],gain[j],exposure_time[j])
 print("init_time:",time.time()-starttime)
 
 
@@ -66,59 +70,66 @@ goods = 0
 for cam in cams:
     cam.start()
 New_connection = False
+
 while True:
     if New_connection:
         for cam in cams:
-            try:
-                cam.stop()
-                cam.close()
-            except:
-                pass
+            cam.stop()
+            cam.close()
         cams = []
         CamNames = []
         [cams,CamNames] = HAB_functions.find_cameras()
-        for cam in cams:
-            HAB_functions.Initialize_camera(cam)
+        for i in range(len(cams)):
+            print(CamNames[i][-2:])
+            for j in range(len(serial_numbs)):
+                if serial_numbs[j] == CamNames[i][-2:]:
+                    print("init")
+                    HAB_functions.Initialize_camera(cams[i],gain[j],exposure_time[j])
+
         for camera in CamNames:
             if not os.path.exists(output_dir+"/"+camera):
                 os.makedirs(output_dir+"/"+camera)
         print("Reconnected...")
-    m = m+1
-    if New_connection:
-        print("boot")
-        New_connection = False
         for cam in cams:
             cam.start()
-    print(m,"(tn)")
+        New_connection = False
+    m = m+1
+        
+    #print(m,"(tn)")
     time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
-    print(time.time()-starttime)
+    #print(time.time()-starttime)
     
     imgs = []
     TIME = np.round(time.time()-starttime,3)
     #print("Before images are taken:",np.round(time.time()-starttime,3))
+    
     if len(simple_pyspin.list_cameras())>len(cams):
         New_connection = True
         print("Will try to reconnect...")
-    if goods == 15:
+    if goods == 5:
         trys = 0
-    for cam in cams:
+    i = 0
+    while i < (len(cams)):
         try:
-            imgs.append(cam.get_array()) # Each image is a numpy array!
+            imgs.append(cams[i].get_array()) # Each image is a numpy array!
             goods +=1
         except:
             goods = 0
             if trys >=2:
-                print("camera disconnected...")
-                index = np.where(cams == cam)[0][0]
-                cams = np.delete(cams,index,0)
-                CamNames.pop(index)
+                print("camera "+CamNames[i]+" disconnected...")
+                
+                cams = np.delete(cams,i,0)
+                CamNames.pop(i)
                 trys = 0
+                i-=1
             else:
                 imgs.append(None)
                 print("img skipped")
                 trys +=1
+        i+=1
         #print(imgs[0].shape, imgs[0].dtype)
         #print("Saving images to: %s" % output_dir)
+    
     #put gps here
     gps.update()
     GPS_data = HAB_functions.GPS(gps)
