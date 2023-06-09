@@ -5,6 +5,7 @@ from simple_pyspin import Camera
 import PySpin
 import adafruit_gps
 import serial
+import RPi.GPIO as GPIO
 
 #This function searches for all cameras and outputs [cameras, names] and takes an input of the expected length
 def find_cameras():
@@ -61,6 +62,13 @@ def Initialize_camera(cam,gain,exposureTime):
         cam.PixelFormat = "Mono16"
     except:
         pass
+
+
+def wait_for_edge(pin):
+    while True:
+        time.sleep(0.05)
+        if GPIO.input(pin):
+            break
 
 
 def GPS(gps):

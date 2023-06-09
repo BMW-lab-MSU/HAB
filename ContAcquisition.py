@@ -11,12 +11,17 @@ import PySpin
 import adafruit_gps
 import serial
 import csv
+import RPi.GPIO as GPIO
 
 #gain and exposure time for the cameras
 serial_numbs = ["58","72","73"]
 gain = [0,0,0]
 exposure_time = [3503,3503,3503] #microseconds
 
+
+#initializes the pps pin
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(7,GPIO.IN,pull_up_down = GPIO.PUD_DOWN)
 
 
 #GPS initialization
@@ -50,13 +55,19 @@ print("init_time:",time.time()-starttime)
 # Make a directory to save some images
 # It is set up such that a new folder with the date/flight# is created
 #first the gps is used to see if it can find the current date
-time.sleep(10)
+time.sleep(5)
+print("past gps")
+gps.update()
+if gps.has_fix:
+    gps.timestamp_utc
+time.sleep(5)
+gps.update()
 if gps.has_fix:
     Date = gps.timestamp_utc
-    Date = TIME[:-3]
-    Date = "-".join([str(i) for i in Date])
-    Date = Date[:-9]
-    output_dir = Date
+    Date = Date[:-3]
+    DATE = "-".join([str(i) for i in Date])
+    DATE = DATE[:-9]
+    output_dir = DATE
 else:
     output_dir = str(date.today())
 if not os.path.exists(output_dir):
@@ -105,8 +116,15 @@ while True:
     m = m+1
         
     #print(m,"(tn)")
-    time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
-    #print(time.time()-starttime)
+    time_since_last_frame = 0
+    if gps.has_fix:
+        while time_since_last_frame < int(imageInterval):
+            HAB_functions.wait_for_edge(7)
+            time_since_last_frame += 1
+            print("GPS:",m)
+    else:
+        time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
+        #print(time.time()-starttime)
     
     imgs = []
     TIME = np.round(time.time()-starttime,3)
