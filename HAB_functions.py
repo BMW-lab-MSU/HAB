@@ -57,7 +57,7 @@ def Initialize_camera(cam,gain,exposureTime):
 
     #cam.AutoExposureControlPriority = 'Gain'
     if cam.ChunkModeActive:
-        cam.ChunkModeActive = Falses
+        cam.ChunkModeActive = False
     try:
         cam.PixelFormat = "Mono16"
     except:

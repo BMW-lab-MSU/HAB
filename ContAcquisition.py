@@ -14,15 +14,33 @@ import csv
 import RPi.GPIO as GPIO
 
 #gain and exposure time for the cameras
+#These will be overridden by the Camera_settings.csv file, but are here in case it does not exist
+#or if the settings for the camera have not been saved
+
 serial_numbs = ["58","72","73"]
 gain = [0,0,0]
 exposure_time = [3503,3503,3503] #microseconds
 
+settings_file = open('Camera_settings.csv','r')
+settings = csv.reader(settings_file,delimiter = ',')
+for line in settings:
+    for i in range(len(serial_numbs)):
+        if line[0][-2:] == serial_numbs[i]:
+            gain[i] = float(line[1])
+            exposure_time[i] = float(line[2])
+settings_file.close()
+print(serial_numbs)
+print(gain)
+print(exposure_time)
 
 #initializes the pps pin
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(7,GPIO.IN,pull_up_down = GPIO.PUD_DOWN)
 
+#initializes the button and LED
+GPIO.setup(31,GPIO.IN,pull_up_down = GPIO.PUD_DOWN)
+GPIO.setup(40,GPIO.OUT)
+GPIO.output(40,GPIO.HIGH)
 
 #GPS initialization
 uart = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=None)
@@ -60,7 +78,7 @@ print("past gps")
 gps.update()
 if gps.has_fix:
     gps.timestamp_utc
-time.sleep(5)
+time.sleep(1)
 gps.update()
 if gps.has_fix:
     Date = gps.timestamp_utc
@@ -92,6 +110,8 @@ for cam in cams:
 New_connection = False
 
 while True:
+    if GPIO.input(31):
+        break
     if New_connection:
         for cam in cams:
             cam.stop()
@@ -175,3 +195,9 @@ while True:
             np.save(output_dir+"/"+CamNames[i]+"/"+filename,imgs[i])
         else:
             print("not saved")
+
+for cam in cams:
+    cam.stop()
+    cam.close()
+GPIO.cleanup()
+print("DONE!")

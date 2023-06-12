@@ -8,6 +8,11 @@ import simple_pyspin
 import numpy as np
 from datetime import date
 import PySpin
+import csv
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(31,GPIO.IN,pull_up_down = GPIO.PUD_DOWN)
 
 def initialize_camera(cam):
     cam.stop()
@@ -50,8 +55,6 @@ def initialize_camera(cam):
 
     cam.AutoExposureControlLoopDamping = 0.2
 
-    cam.AutoExposureControlPriority = 'Gain'
-
     cam.ChunkModeActive = False
     try:
         cam.PixelFormat = "Mono16"
@@ -59,6 +62,8 @@ def initialize_camera(cam):
         pass
 
 imageInterval = "1"
+Images_to_be_taken = 30
+DATE = str(date.today())
 
 [cams,CamNames] = HAB_functions.find_cameras()
 for cam in cams:
@@ -77,9 +82,10 @@ Gain = [0,0,0]
 for cam in cams:
     cam.start()
 New_connection = False
-input("Press enter to start averaging")
 
 while True:
+    if GPIO.input(31):
+        break
     if New_connection:
         for cam in cams:
             try:
@@ -117,7 +123,6 @@ while True:
         try:
             cams[i].GainAuto = 'Continuous'
             cams[i].ExposureAuto = 'Continuous'
-            #cams[i].stop
             Gain[i] = (Gain[i]*(m-1)/m)+(cams[i].Gain/m)
             ET[i] = (ET[i]*(m-1)/m)+(cams[i].ExposureTime/m)
             print(CamNames[i]+" Avgs:")
@@ -140,5 +145,19 @@ while True:
                 print("img skipped")
                 trys +=1
 
+#gets string to save
+file = open('Camera_settings.csv','w')
+write = csv.writer(file)
+write.writerow([DATE])
+write.writerow(["Name","Gain","Exposure"])
 
+for i in range(len(CamNames)):
+    Camera_settings = [CamNames[i],str(Gain[i]),str(ET[i])]
+    write.writerow(Camera_settings)
+
+file.close()
+
+for cam in cams:
+    cam.stop()
+    cam.close()
 
