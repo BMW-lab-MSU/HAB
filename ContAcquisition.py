@@ -197,7 +197,7 @@ while True:
     #gets data from gps
     gps.update()
     GPS_data = HAB_functions.GPS(gps)
-    GPS_data = GPS_data+tuple(str(m))
+    GPS_data = GPS_data+tuple([str(m)])
     file = open(output_dir+"/GPS_DATA.csv",'a')
     write = csv.writer(file)
     write.writerow(GPS_data)
