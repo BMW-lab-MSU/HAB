@@ -1,5 +1,5 @@
-#ContAcquisition.py
-
+#ManAcquisition.py
+#this script is for calibration purposes and will make a file labeled with the date and CAL
 from simple_pyspin import Camera
 from PIL import Image
 import os
@@ -13,11 +13,14 @@ from matplotlib import image as mpimg
 
 #Entering the exposure time desired
 exposureTime = "15000"
+#important because the calibrations are done with specific filters
 color = "671nm"
 expected_cameras = 1
 
 #enering the time between taking images
 imageInterval = "1"
+
+#this keeps searching for the camera and will not continue if its not there
 
 def find_cameras(expected_length):
     cams = []
@@ -31,12 +34,10 @@ def find_cameras(expected_length):
             cams = np.append(Camera(i),cams)
             Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
         return(cams,Names)
+
 def Initialize_camera(cam):
     cam.init()
     cam.stop()
-    #print("camera pixel format is", cam.PixelFormat)
-
-    # To change the frame rate, we need to enable manual control
     cam.AcquisitionFrameRateEnable = True
     cam.AcquisitionFrameRate = 1
 
@@ -44,7 +45,7 @@ def Initialize_camera(cam):
 
     # To control the exposure settings, we need to turn off auto
     cam.GainAuto = 'Off'
-    # Set the gain to 20 dB or the maximum of the camera.
+    # Set the gain to 0.
     gain = min(0, cam.get_info('Gain')['max'])
     #print("Setting gain to %.1f dB" % gain)
     print(gain)
@@ -52,37 +53,19 @@ def Initialize_camera(cam):
     cam.ExposureAuto = 'Off'
     cam.ExposureTime = int(exposureTime) # microseconds
 
-    #print("Exposure Time: ", cam.ExposureTime)     
-
-    #cam.BalanceWhiteAuto = 'Off'
-
-    #cam.SharpeningAuto = False
-
     cam.GammaEnable = False
 
     cam.BlackLevelClampingEnable = False
 
-    #cam.SaturationEnable = False
-
-    #cam.AasRoiEnable = False
-
     cam.AutoExposureTargetGreyValueAuto = 'Off'
 
-    #cam.AutoExposureMeteringMode = 'Average'
-
     cam.AutoExposureControlLoopDamping = 0.2
-
-    #cam.AutoExposureControlPriority = 'Gain'
 
     cam.ChunkModeActive = False
 
     cam.PixelFormat = "Mono16"
 
     
-
-#get all cameras connected to the pi
-
-
 
 
 #initialize the cameras and set settings
@@ -94,7 +77,7 @@ print("init_time:",time.time()-starttime)
 
 
 # Make a directory to save some images
-# It is set up such that a new folder with the date/flight# is created
+# It is set up such that a new folder with the date_CAL/flight# is created
 output_dir = str(date.today())+"_CAL"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
@@ -114,6 +97,10 @@ for cam in cams:
 New_connection = False
 Degree = 0
 pic_numb = 0
+#This code is similar to what is in cont aquisition, except it takes 5 pictures in a
+#row and then waits for an input for the next set of images
+#it is also important to note that this code is currently set up for degrees
+#which represent the angle of the polarizer, but that can be easily changed
 while True:
     if New_connection:
         for cam in cams:
@@ -160,7 +147,7 @@ while True:
             imgs.append(None)
         #print(imgs[0].shape, imgs[0].dtype)
         #print("Saving images to: %s" % output_dir)
-    #put gps here
+
     pic_numb+=1
     print("After images are taken:",np.round(time.time()-starttime,3))
     for i in range(len(cams)):

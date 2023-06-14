@@ -6,19 +6,19 @@ import os
 import time
 import simple_pyspin
 import numpy as np
-from datetime import date
+from datetime import datetime
 import PySpin
 import csv
 import RPi.GPIO as GPIO
 
+#sets up button
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(31,GPIO.IN,pull_up_down = GPIO.PUD_DOWN)
 
+#similar to the function in HAB_functions, except the auto gain and exposure are set to cont
 def initialize_camera(cam):
     cam.stop()
-    #cam.close()
     cam.init()
-    #print("camera pixel format is", cam.PixelFormat)
 
     # To change the frame rate, we need to enable manual control
     cam.AcquisitionFrameRateEnable = True
@@ -26,29 +26,17 @@ def initialize_camera(cam):
 
     cam.AcquisitionMode = 'Continuous'
 
-    # To control the exposure settings, we need to turn off auto
+
     cam.GainAuto = 'Continuous'
-    # Set the gain to 20 dB or the maximum of the camera.
-    #gain = min(0, cam.get_info('Gain')['max'])
-    #print("Setting gain to %.1f dB" % gain)
-    #cam.Gain = gain
+
     cam.ExposureAuto = 'Continuous'
-    #cam.ExposureTime = int(exposureTime) # microseconds
-
-    #print("Exposure Time: ", cam.ExposureTime)     
-
-    #cam.BalanceWhiteAuto = 'Off'
-
-    #cam.SharpeningAuto = False
 
     cam.GammaEnable = False
 
     cam.BlackLevelClampingEnable = False
 
-    #cam.SaturationEnable = False
-
-    #cam.AasRoiEnable = False
-
+    #this controles if gain or exposure gets changed first
+    #it is set to off to ensure that they will both change
     cam.AutoExposureTargetGreyValueAuto = 'Off'
 
     #cam.AutoExposureMeteringMode = 'Average'
@@ -62,8 +50,8 @@ def initialize_camera(cam):
         pass
 
 imageInterval = "1"
-Images_to_be_taken = 30
-DATE = str(date.today())
+#gets current time so that it can check when the last time the exposure and gain was updated
+DATE = str(datetime.utcnow())
 
 [cams,CamNames] = HAB_functions.find_cameras()
 for cam in cams:
@@ -77,6 +65,8 @@ starttime = time.time()
 m = 0
 trys = 0
 goods = 0
+#ET = exposure time
+#its of size 3 because we are using 3 cameras
 ET = [0,0,0]
 Gain = [0,0,0]
 for cam in cams:
@@ -84,8 +74,10 @@ for cam in cams:
 New_connection = False
 
 while True:
+    #stops if the button is pressed
     if GPIO.input(31):
         break
+    #connects new camera if detected
     if New_connection:
         for cam in cams:
             try:
@@ -121,6 +113,7 @@ while True:
     print()
     for i in range(len(cams)):
         try:
+            #gets the averages
             cams[i].GainAuto = 'Continuous'
             cams[i].ExposureAuto = 'Continuous'
             Gain[i] = (Gain[i]*(m-1)/m)+(cams[i].Gain/m)
@@ -130,7 +123,6 @@ while True:
             print("    Gain:", cams[i].Gain)
             print("    Exposure Time:"+str(ET[i]))
             print("    Exposure Time:", cams[i].ExposureTime)
-            #cams[i].start()
             goods +=1
         except:
             goods = 0
@@ -145,12 +137,13 @@ while True:
                 print("img skipped")
                 trys +=1
 
-#gets string to save
+#opens file, and saves the current time
 file = open('Camera_settings.csv','w')
 write = csv.writer(file)
 write.writerow([DATE])
 write.writerow(["Name","Gain","Exposure"])
 
+#saves camera settings
 for i in range(len(CamNames)):
     Camera_settings = [CamNames[i],str(Gain[i]),str(ET[i])]
     write.writerow(Camera_settings)
