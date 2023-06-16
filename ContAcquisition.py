@@ -27,7 +27,8 @@ for line in settings:
     for i in range(len(serial_numbs)):
         if line[0][-2:] == serial_numbs[i]:
             gain[i] = float(line[1])
-            exposure_time[i] = float(line[2])
+            if float(line[2])>=100:
+                exposure_time[i] = float(line[2])
 settings_file.close()
 
 
