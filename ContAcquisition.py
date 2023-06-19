@@ -207,7 +207,7 @@ while True:
     #saving the images as numpy arrays
     for i in range(len(cams)):
         
-        filename = "T"+str(TIME)+"-G"+str(cams[i].Gain)+"-E"+str(cams[i].ExposureTime)+"-F"+str(m)
+        filename = "F"+str(m).zfill(5)+"-T"+str(TIME)+"-G"+str(cams[i].Gain)+"-E"+str(cams[i].ExposureTime)
         filename = filename.replace(".","_",3)
         
         #makes sure the image exists
