@@ -8,7 +8,7 @@ camera = "73"
 def npy_to_mat
     directory = "/media/flint/Elements/Jun_19/Flight_1"
     dir = directory+"/220277"+camera
-    mat_dir = directory+"/mats"+camera
+    mat_dir = directory+"/mats_"+camera
 
     if not os.path.exists(mat_dir):
         os.mkdir(mat_dir)
