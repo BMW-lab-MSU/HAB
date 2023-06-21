@@ -1,11 +1,12 @@
 import scipy.io
 import numpy as np
 import os
+from multiprocessing import Pool
 
 #converts all np images in a folder to mat and creates a dir for them
 camera = "73"
 
-def npy_to_mat
+def npy_to_mat(camera)
     directory = "/media/flint/Elements/Jun_19/Flight_1"
     dir = directory+"/220277"+camera
     mat_dir = directory+"/mats_"+camera
@@ -23,6 +24,10 @@ def npy_to_mat
 
         except:
             print(image_file)
+
+with Pool(6) as p:
+    p.map(npy_to_mat,["58","72","73"])
+print("Done")
 
 
 #file_path = 'data.mat'
