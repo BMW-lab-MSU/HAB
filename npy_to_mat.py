@@ -16,8 +16,10 @@ def npy_to_mat
     for image_file in tqdm(os.listdir(dir),position=0,leave=True):
         print("\n")
         try:
+            file_path = mat_dir+"/"+img_fileName
             img_fileName = image_file[:-4]+".png"
-            scipy.io.savemat(mat_dir+"/"+img_fileName,)
+            image_np = np.load(dir+"/"+image_file)
+            scipy.io.savemat(file_path, {img_fileName, image_np})
 
         except:
             print(image_file)
