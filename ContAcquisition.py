@@ -112,11 +112,14 @@ write.writerow(["Latitude","Longitude","Altitude[m]","UTC","Frame"])
 file.close()
 
 #create log file
-LOG = open(output_dir+"/Log.txt",'w')
+LOG = open(output_dir+"/Log.csv",'w')
 write_log = csv.writer(LOG)
 
 
+
 starttime = time.time()
+
+write_log.writerow(['TIME','Frame','LOG'])
 #M shows the frame number, trys and good are here to disconnect the camera if
 #it misses 2 frames
 m = 0
@@ -129,7 +132,7 @@ New_connection = False
 while True:
     #breaks if the button is pressed
     if GPIO.input(31):
-        write_log.writerow(["Button pressed-loop exited"])
+        write_log.writerow([round((time.time() - starttime),3),m,"Button pressed-loop exited"])
         break
     # disconnects and reconnects  all cameras if a new camera is detected
     if New_connection:
@@ -149,7 +152,7 @@ while True:
         for camera in CamNames:
             if not os.path.exists(output_dir+"/"+camera):
                 os.makedirs(output_dir+"/"+camera)
-        write_log.writerow(["Reconnected..."])
+        write_log.writerow([round((time.time() - starttime),3),m,"Reconnected..."])
         for cam in cams:
             cam.start()
         New_connection = False
@@ -180,7 +183,7 @@ while True:
     #detects new camera
     if len(simple_pyspin.list_cameras())>len(cams):
         New_connection = True
-        write_log.writerow(["Will try to reconnect..."])
+        write_log.writerow([round((time.time() - starttime),3),m,"Will try to reconnect..."])
     if goods == 5:
         trys = 0
     i = 0
@@ -191,7 +194,7 @@ while True:
         except:
             goods = 0
             if trys >=2:
-                write_log.writerow(["camera "+CamNames[i]+" disconnected..."])
+                write_log.writerow([round((time.time() - starttime),3),m,"camera "+CamNames[i]+" disconnected..."])
                 
                 cams = np.delete(cams,i,0)
                 CamNames.pop(i)
@@ -199,7 +202,7 @@ while True:
                 i-=1
             else:
                 imgs.append(None)
-                write_log.writerow(["img skipped"])
+                write_log.writerow([round((time.time() - starttime),3),m,"img skipped"])
                 trys +=1
         i+=1
     
