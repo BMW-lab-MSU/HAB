@@ -67,19 +67,19 @@ for cam in cams:
 [cams,CamNames] = HAB_functions.find_cameras()
 #initializes the cameras with the desired settings
 for i in range(len(cams)):
-    logging.debug(CamNames[i][-2:])
+    print(CamNames[i][-2:])
     for j in range(len(serial_numbs)):
         if serial_numbs[j] == CamNames[i][-2:]:
-            logging.debug("init")
+            print("init")
             HAB_functions.Initialize_camera(cams[i],gain[j],exposure_time[j])
-logging.debug("init_time:",time.time()-starttime)
+print("init_time:",time.time()-starttime)
 
 
 # Make a directory to save some images
 # It is set up such that a new folder with the date/flight# is created
 #first the gps is used to see if it can find the current date
 time.sleep(5)
-logging.debug("past gps")
+print("past gps")
 gps.update()
 if gps.has_fix:
     gps.timestamp_utc
@@ -112,7 +112,9 @@ write.writerow(["Latitude","Longitude","Altitude[m]","UTC","Frame"])
 file.close()
 
 #create log file
-logging.basicConfig(filename=output_dir+'/ContAc.log', encoding='utf-8', level=logging.DEBUG)
+LOG = open(output_dir+"/Log.txt",'w')
+write_log = csv.writer(LOG)
+
 
 starttime = time.time()
 #M shows the frame number, trys and good are here to disconnect the camera if
@@ -127,7 +129,7 @@ New_connection = False
 while True:
     #breaks if the button is pressed
     if GPIO.input(31):
-        logging.debug("Button pressed-loop exited")
+        write_log.writerow(["Button pressed-loop exited"])
         break
     # disconnects and reconnects  all cameras if a new camera is detected
     if New_connection:
@@ -138,16 +140,16 @@ while True:
         CamNames = []
         [cams,CamNames] = HAB_functions.find_cameras()
         for i in range(len(cams)):
-            logging.debug(CamNames[i][-2:])
+            print(CamNames[i][-2:])
             for j in range(len(serial_numbs)):
                 if serial_numbs[j] == CamNames[i][-2:]:
-                    logging.debug("init")
+                    print("init")
                     HAB_functions.Initialize_camera(cams[i],gain[j],exposure_time[j])
 
         for camera in CamNames:
             if not os.path.exists(output_dir+"/"+camera):
                 os.makedirs(output_dir+"/"+camera)
-        logging.debug("Reconnected...")
+        write_log.writerow(["Reconnected..."])
         for cam in cams:
             cam.start()
         New_connection = False
@@ -167,10 +169,10 @@ while True:
                 break
             HAB_functions.wait_for_edge_gps(7,gps)
             time_since_last_frame += 1
-            logging.debug("GPS:",m)
+            print("GPS:",m)
     else:
         time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
-        logging.debug("CLOCK",m)
+        print("CLOCK",m)
         
     imgs = []
     TIME = np.round(time.time()-starttime,3)#time from beginning
@@ -178,7 +180,7 @@ while True:
     #detects new camera
     if len(simple_pyspin.list_cameras())>len(cams):
         New_connection = True
-        logging.debug("Will try to reconnect...")
+        write_log.writerow(["Will try to reconnect..."])
     if goods == 5:
         trys = 0
     i = 0
@@ -189,7 +191,7 @@ while True:
         except:
             goods = 0
             if trys >=2:
-                logging.debug("camera "+CamNames[i]+" disconnected...")
+                write_log.writerow(["camera "+CamNames[i]+" disconnected..."])
                 
                 cams = np.delete(cams,i,0)
                 CamNames.pop(i)
@@ -197,7 +199,7 @@ while True:
                 i-=1
             else:
                 imgs.append(None)
-                logging.debug("img skipped")
+                write_log.writerow(["img skipped"])
                 trys +=1
         i+=1
     
@@ -220,7 +222,7 @@ while True:
         if type(imgs[i]) != type(None):
             np.save(output_dir+"/"+CamNames[i]+"/"+filename,imgs[i])
         else:
-            logging.debug("not saved")
+            print("not saved")
 
 
 #shutdown camera,GPIO pins, and the auto run feature
@@ -229,4 +231,5 @@ for cam in cams:
     cam.close()
 GPIO.cleanup()
 os.system("sudo systemctl stop HAB")
-logging.debug("DONE!")
+LOG.close()
+print("DONE!")
