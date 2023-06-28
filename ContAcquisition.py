@@ -114,12 +114,11 @@ file.close()
 #create log file
 LOG = open(output_dir+"/Log.csv",'w')
 write_log = csv.writer(LOG)
-
+write_log.writerow(['TIME','Frame','LOG'])
+LOG.close()
 
 
 starttime = time.time()
-
-write_log.writerow(['TIME','Frame','LOG'])
 #M shows the frame number, trys and good are here to disconnect the camera if
 #it misses 2 frames
 m = 0
@@ -132,7 +131,10 @@ New_connection = False
 while True:
     #breaks if the button is pressed
     if GPIO.input(31):
+        LOG = open(output_dir+"/Log.csv",'a')
+        write_log = csv.writer(LOG)
         write_log.writerow([round((time.time() - starttime),3),m,"Button pressed-loop exited"])
+        LOG.close()
         break
     # disconnects and reconnects  all cameras if a new camera is detected
     if New_connection:
@@ -152,7 +154,10 @@ while True:
         for camera in CamNames:
             if not os.path.exists(output_dir+"/"+camera):
                 os.makedirs(output_dir+"/"+camera)
+        LOG = open(output_dir+"/Log.csv",'a')
+        write_log = csv.writer(LOG)
         write_log.writerow([round((time.time() - starttime),3),m,"Reconnected..."])
+        LOG.close()
         for cam in cams:
             cam.start()
         New_connection = False
@@ -183,7 +188,10 @@ while True:
     #detects new camera
     if len(simple_pyspin.list_cameras())>len(cams):
         New_connection = True
+        LOG = open(output_dir+"/Log.csv",'a')
+        write_log = csv.writer(LOG)
         write_log.writerow([round((time.time() - starttime),3),m,"Will try to reconnect..."])
+        LOG.close()
     if goods == 5:
         trys = 0
     i = 0
@@ -194,15 +202,20 @@ while True:
         except:
             goods = 0
             if trys >=2:
+                LOG = open(output_dir+"/Log.csv",'a')
+                write_log = csv.writer(LOG)
                 write_log.writerow([round((time.time() - starttime),3),m,"camera "+CamNames[i]+" disconnected..."])
-                
+                LOG.close()
                 cams = np.delete(cams,i,0)
                 CamNames.pop(i)
                 trys = 0
                 i-=1
             else:
                 imgs.append(None)
+                LOG = open(output_dir+"/Log.csv",'a')
+                write_log = csv.writer(LOG)
                 write_log.writerow([round((time.time() - starttime),3),m,"img skipped"])
+                LOG.close()
                 trys +=1
         i+=1
     
@@ -234,5 +247,8 @@ for cam in cams:
     cam.close()
 GPIO.cleanup()
 os.system("sudo systemctl stop HAB")
+LOG = open(output_dir+"/Log.csv",'a')
+write_log = csv.writer(LOG)
+write_log.writerow([round((time.time() - starttime),3),m,"DONE"])
 LOG.close()
 print("DONE!")
