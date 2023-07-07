@@ -26,7 +26,7 @@ def polarization_cal(DIR):
 
 def dark_cal(DIR):
     to_remove="GETimg_"
-    photos = np.empty([20408,2448])
+    photos = np.empty([2048,2448])
     
     for image_file in os.listdir(DIR):
         name = image_file[:-4];name = name.replace("_",".",3)
@@ -66,7 +66,7 @@ def npy_to_mat(cal_day):
                     scipy.io.savemat(mat_dir, mdic)
                     print("\nsaved: "+mat_dir)
 
-directorys = ["/media/flint/Elements/HAB/2023-05-29-CAL/","/media/flint/Elements/HAB/2023-05-31_CAL/",]
+directorys = ["/media/flint/Elements/HAB/2023-05-29-CAL/"]
 with Pool(6) as p:
     p.map(npy_to_mat,directorys)
 print("Done")
