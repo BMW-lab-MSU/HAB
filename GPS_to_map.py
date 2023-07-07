@@ -1,7 +1,7 @@
 import plotly.express as px
 import pandas as pd
 from plotly.offline import plot
-directory = "/media/flint/Elements/HAB/Flight_23/"
+directory = "/media/flint/Elements/HAB/Jul_5_test/Flight_2/"
 df = pd.read_csv(directory+"GPS_DATA.csv")
 types = ['open-street-map', 'white-bg', 'carto-positron', 'carto-darkmatter', 'stamen-terrain', 'stamen-toner', 'stamen-watercolor']
 
