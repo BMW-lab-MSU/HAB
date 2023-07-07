@@ -12,10 +12,11 @@ from matplotlib import pyplot as plt
 from matplotlib import image as mpimg
 
 #Entering the exposure time desired
+gain = 0
 exposureTime = "15000"
 #important because the calibrations are done with specific filters
 color = "671nm"
-cal_or_dark = "dark"
+cal_or_dark = "cal"
 expected_cameras = 1
 
 #enering the time between taking images
@@ -37,8 +38,9 @@ def find_cameras(expected_length):
         return(cams,Names)
 
 def Initialize_camera(cam):
-    cam.init()
     cam.stop()
+    cam.init()
+    
     cam.AcquisitionFrameRateEnable = True
     cam.AcquisitionFrameRate = 1
 
@@ -46,10 +48,6 @@ def Initialize_camera(cam):
 
     # To control the exposure settings, we need to turn off auto
     cam.GainAuto = 'Off'
-    # Set the gain to 0.
-    gain = min(0, cam.get_info('Gain')['max'])
-    #print("Setting gain to %.1f dB" % gain)
-    print(gain)
     cam.Gain = gain
     cam.ExposureAuto = 'Off'
     cam.ExposureTime = int(exposureTime) # microseconds
@@ -63,8 +61,8 @@ def Initialize_camera(cam):
     cam.AutoExposureControlLoopDamping = 0.2
 
     cam.ChunkModeActive = False
-
-    cam.PixelFormat = "Mono16"
+    if cam.PixelFormat != "Mono16":    
+        cam.PixelFormat = "Mono16"
 
     
 
@@ -106,6 +104,7 @@ pic_numb = 0
 #row and then waits for an input for the next set of images
 #it is also important to note that this code is currently set up for degrees
 #which represent the angle of the polarizer, but that can be easily changed
+input("start at 0 Degree")
 while True:
     if New_connection:
         for cam in cams:
@@ -125,7 +124,8 @@ while True:
     if pic_numb >=5:
         Degree +=15
         print()
-        input("\nDegree to be taken:"+str(Degree))
+        if input("\nDegree to be taken:"+str(Degree)).lower() == "stop":
+            break
         
         pic_numb=0
     
@@ -158,9 +158,10 @@ while True:
     pic_numb+=1
     for i in range(len(cams)):
         
-        filename = "G"+str(cams[i].Gain)+"-E"+str(cams[i].ExposureTime)+"-T"+str(TIME)+"-img"+str(pic_numb)
+        filename = "Img"+str(pic_numb)+"-E"+str(cams[i].ExposureTime)+"-T"+str(TIME)+"-G"+str(cams[i].Gain)
+        filename=filename.replace(".","_")
         if cal_or_dark == "cal":
-            filename= "-Degree"+str(Degree).zfill(3)+filename
+            filename= "Degree"+str(Degree).zfill(3)+"-"+filename
         
         #Image.fromarray(imgs[i]).save(os.path.join(output_dir+"/"+CamNames[i]+"/"+filename)) #Files named based on m
         if type(imgs[i]) != type(None):
