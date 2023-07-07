@@ -15,6 +15,7 @@ from matplotlib import image as mpimg
 exposureTime = "15000"
 #important because the calibrations are done with specific filters
 color = "671nm"
+cal_or_dark = "dark"
 expected_cameras = 1
 
 #enering the time between taking images
@@ -78,12 +79,16 @@ print("init_time:",time.time()-starttime)
 
 # Make a directory to save some images
 # It is set up such that a new folder with the date_CAL/flight# is created
-output_dir = str(date.today())+"_CAL"
+output_dir = str(date.today())+"-CAL"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
+output_dir = output_dir+"/"+color
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
 flights = os.listdir(output_dir)
 flight_numb = str(len(flights)+1)
-output_dir = output_dir+"/cal_"+color+"_"+flight_numb
+output_dir = output_dir+"/"+cal_or_dark+"_"+flight_numb
 os.makedirs(output_dir)
 for camera in CamNames:
     if not os.path.exists(output_dir+"/"+camera):
@@ -148,20 +153,22 @@ while True:
         #print(imgs[0].shape, imgs[0].dtype)
         #print("Saving images to: %s" % output_dir)
 
-    pic_numb+=1
+    
     print("After images are taken:",np.round(time.time()-starttime,3))
+    pic_numb+=1
     for i in range(len(cams)):
         
-        filename = "G"+str(cams[i].Gain)+"-E"+str(cams[i].ExposureTime)+"-T"+str(TIME)+"-img_"+str(pic_numb)+"-"
-        filename = filename.replace(".","_",3)
-        filename= filename+"_Dark"
-        #filename= filename+"Degree_"+str(Degree)
+        filename = "G"+str(cams[i].Gain)+"-E"+str(cams[i].ExposureTime)+"-T"+str(TIME)+"-img"+str(pic_numb)
+        if cal_or_dark == "cal":
+            filename= "-Degree"+str(Degree).zfill(3)+filename
         
         #Image.fromarray(imgs[i]).save(os.path.join(output_dir+"/"+CamNames[i]+"/"+filename)) #Files named based on m
         if type(imgs[i]) != type(None):
             print("min:",np.amin(imgs[i]))
             print("max:",np.amax(imgs[i]))
             np.save(output_dir+"/"+CamNames[i]+"/"+filename,imgs[i])
+            
         else:
             print("not saved")
+    
     
