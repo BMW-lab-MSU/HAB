@@ -125,7 +125,7 @@ while True:
     if pic_numb >=5:
         Degree +=15
         print()
-        input("current degree:"+str(Degree))
+        input("\nDegree to be taken:"+str(Degree))
         
         pic_numb=0
     
