@@ -120,7 +120,7 @@ while True:
         print("Reconnected...")
     m = m+1
     print("tick number: ",m)
-    #time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
+    time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
     
     if pic_numb >=5:
         Degree +=15
