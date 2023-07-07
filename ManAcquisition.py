@@ -15,8 +15,8 @@ from matplotlib import image as mpimg
 gain = 0
 exposureTime = "15000"
 #important because the calibrations are done with specific filters
-color = "671nm"
-cal_or_dark = "cal"
+color = "440nm"
+cal_or_dark = "radiometric"
 expected_cameras = 1
 
 #enering the time between taking images
@@ -104,7 +104,7 @@ pic_numb = 0
 #row and then waits for an input for the next set of images
 #it is also important to note that this code is currently set up for degrees
 #which represent the angle of the polarizer, but that can be easily changed
-input("start at 0 Degree")
+radiometric = input("start at 0 Degree")
 while True:
     if New_connection:
         for cam in cams:
@@ -124,7 +124,8 @@ while True:
     if pic_numb >=5:
         Degree +=15
         print()
-        if input("\nDegree to be taken:"+str(Degree)).lower() == "stop":
+        radiometric = input("\nDegree to be taken:"+str(Degree)).lower()
+        if radiometric == "stop":
             break
         
         pic_numb=0
@@ -162,6 +163,8 @@ while True:
         filename=filename.replace(".","_")
         if cal_or_dark == "cal":
             filename= "Degree"+str(Degree).zfill(3)+"-"+filename
+        elif cal_or_dark == "radiometric":
+            filename = "current(ua)"+radiometric+"-"+filename
         
         #Image.fromarray(imgs[i]).save(os.path.join(output_dir+"/"+CamNames[i]+"/"+filename)) #Files named based on m
         if type(imgs[i]) != type(None):
