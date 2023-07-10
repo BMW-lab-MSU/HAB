@@ -1,5 +1,6 @@
 #ManAcquisition.py
 #this script is for calibration purposes and will make a file labeled with the date and CAL
+import HAB_functions
 from simple_pyspin import Camera
 from PIL import Image
 import os
@@ -13,65 +14,23 @@ from matplotlib import image as mpimg
 
 #Entering the exposure time desired
 gain = 0
-exposureTime = "15000"
+exposureTime = 15000
 #important because the calibrations are done with specific filters
 color = "440nm"
 cal_or_dark = "radiometric"
-expected_cameras = 1
 
 #enering the time between taking images
 imageInterval = "1"
 
 #this keeps searching for the camera and will not continue if its not there
 
-def find_cameras(expected_length):
-    cams = []
-    Names = []
-    if len(simple_pyspin.list_cameras()) != expected_length:
-        print("did not find all cameras, searching...")
-        time.sleep(0.5)
-        find_cameras(expected_length)
-    else:
-        for i in range(len(simple_pyspin.list_cameras())):
-            cams = np.append(Camera(i),cams)
-            Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
-        return(cams,Names)
-
-def Initialize_camera(cam):
-    cam.stop()
-    cam.init()
-    
-    cam.AcquisitionFrameRateEnable = True
-    cam.AcquisitionFrameRate = 1
-
-    cam.AcquisitionMode = 'Continuous'
-
-    # To control the exposure settings, we need to turn off auto
-    cam.GainAuto = 'Off'
-    cam.Gain = gain
-    cam.ExposureAuto = 'Off'
-    cam.ExposureTime = int(exposureTime) # microseconds
-
-    cam.GammaEnable = False
-
-    cam.BlackLevelClampingEnable = False
-
-    cam.AutoExposureTargetGreyValueAuto = 'Off'
-
-    cam.AutoExposureControlLoopDamping = 0.2
-
-    cam.ChunkModeActive = False
-    if cam.PixelFormat != "Mono16":    
-        cam.PixelFormat = "Mono16"
-
-    
 
 
 #initialize the cameras and set settings
 starttime = time.time()
-[cams,CamNames] = find_cameras(expected_cameras)
+[cams,CamNames] = HAB_functions.find_cameras()
 for cam in cams:
-    Initialize_camera(cam)
+    HAB_functions.Initialize_camera(cam,gain,exposureTime)
 print("init_time:",time.time()-starttime)
 
 
