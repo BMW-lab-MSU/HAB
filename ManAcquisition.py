@@ -14,10 +14,10 @@ from matplotlib import image as mpimg
 
 #Entering the exposure time desired
 gain = 0
-exposureTime = 15000
+exposureTime = 4000
 #important because the calibrations are done with specific filters
-color = "440nm"
-cal_or_dark = "radiometric"
+color = "58"
+cal_or_dark = "cal"
 
 #enering the time between taking images
 imageInterval = "1"
@@ -98,6 +98,8 @@ while True:
     TIME = np.round(time.time()-starttime,3)
     print("Before images are taken:",np.round(time.time()-starttime,3))
     for cam in cams:
+        cam.stop()
+        cam.start()
         try:
             
             
@@ -129,6 +131,7 @@ while True:
         if type(imgs[i]) != type(None):
             print("min:",np.amin(imgs[i]))
             print("max:",np.amax(imgs[i]))
+            print("mean:",np.mean(imgs[i]))
             np.save(output_dir+"/"+CamNames[i]+"/"+filename,imgs[i])
             
         else:
