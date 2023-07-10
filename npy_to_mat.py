@@ -8,20 +8,20 @@ def polarization_cal(DIR):
     deg_pol = [0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270,285,300,315,330,345,360]
     angles = [0,-15,-30,-45,-60,-75,-90,-105,-120,-135,-150,-165,-180,-195,-210,-225,-240,-255,-270,-285,-300,-315,-330,-345,-360]
     photos = np.empty([2048,2448,len(deg_pol)])
-    to_remove="GETimgDegr_"
+    to_remove="GETIimgDegr_"
     
     for image_file in os.listdir(DIR):
-        name = image_file[:-4];name = name.replace("_",".",3)
+        name = image_file[:-4];name = name.replace("_",".")
         for char in to_remove: name = name.replace(char,"")
         info = [float(x) for x in name.split("-")]
         try:
             image_np = np.load(DIR+"/"+image_file)
-            photos[:,:,int(info[-1]/15)]=photos[:,:,int(info[-1]/15)]+(0.2*image_np)
+            photos[:,:,int(info[0]/15)]=photos[:,:,int(info[0]/15)]+(0.2*image_np)
 
         except:
             print("\n not numpy:"+DIR+"/",image_file)
             return
-    mdic = {"angles":angles,"deg_pol":deg_pol,"exposure":info[1],"gain":info[0],"image_array": photos}
+    mdic = {"angles":angles,"deg_pol":deg_pol,"exposure":info[3],"gain":info[4],"image_array": photos}
     return(mdic)
 
 def dark_cal(DIR):
@@ -66,7 +66,7 @@ def npy_to_mat(cal_day):
                     scipy.io.savemat(mat_dir, mdic)
                     print("\nsaved: "+mat_dir)
 
-directorys = ["/media/flint/Elements/HAB/2023-05-29-CAL/"]
+directorys = ["/media/flint/Elements/HAB/2023-07-10-CAL/58/"]
 with Pool(6) as p:
     p.map(npy_to_mat,directorys)
 print("Done")
