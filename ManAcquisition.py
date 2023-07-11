@@ -1,6 +1,6 @@
 #ManAcquisition.py
 #this script is for calibration purposes and will make a file labeled with the date and CAL
-import HAB_functions
+
 from simple_pyspin import Camera
 from PIL import Image
 import os
@@ -12,6 +12,62 @@ import PySpin
 from matplotlib import pyplot as plt
 from matplotlib import image as mpimg
 
+
+def find_cameras():
+    cams = []
+    Names = []
+    for i in range(len(simple_pyspin.list_cameras())):
+        cams = np.append(cams,Camera(i))
+        Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
+    return(cams,Names)
+
+def Initialize_camera(cam,gain,exposureTime):
+    #The camera can't be running while the settings are being changed, hence the
+    #cam.stop
+    cam.stop()
+    cam.init()
+
+    # To change the frame rate, we need to enable manual control
+    cam.AcquisitionFrameRateEnable = True
+    cam.AcquisitionFrameRate = 1
+
+    if cam.AcquisitionMode != 'Continuous':
+        cam.AcquisitionMode = 'Continuous'
+
+    # To control the exposure settings, we need to turn off auto
+    cam.GainAuto = "Off"
+    cam.Gain = gain
+    cam.ExposureAuto = 'Off'
+    cam.ExposureTime = exposureTime # microseconds
+  
+
+    #cam.BalanceWhiteAuto = 'Off' # not on grayscale cameras
+
+    #cam.SharpeningAuto = False
+    if cam.GammaEnable:
+        cam.GammaEnable = False
+    if cam.BlackLevelClampingEnable:
+        cam.BlackLevelClampingEnable = False
+
+    #cam.SaturationEnable = False
+
+    #cam.AasRoiEnable = False
+    if cam.AutoExposureTargetGreyValueAuto != 'Off':
+        cam.AutoExposureTargetGreyValueAuto = 'Off'
+
+    #cam.AutoExposureMeteringMode = 'Average'
+    if cam.AutoExposureControlLoopDamping != 0.2:
+        cam.AutoExposureControlLoopDamping = 0.2
+
+    #cam.AutoExposureControlPriority = 'Gain'
+    if cam.ChunkModeActive:
+        cam.ChunkModeActive = False
+    # once this is changed once it cant be changed agian while the camera has power
+    #the try statement is to prevent a crash in the event it has already been set
+    try:
+        cam.PixelFormat = "Mono16"
+    except:
+        pass
 #Entering the exposure time desired
 gain = 0
 exposureTime = 4000
@@ -28,9 +84,17 @@ imageInterval = "1"
 
 #initialize the cameras and set settings
 starttime = time.time()
-[cams,CamNames] = HAB_functions.find_cameras()
+[cams,CamNames] = find_cameras()
+
+
+#This stops the cameras to ensure the settigns can be changed
 for cam in cams:
-    HAB_functions.Initialize_camera(cam,gain,exposureTime)
+    cam.stop()
+    cam.close()
+#initialize the cameras and set settings
+[cams,CamNames] = find_cameras()   
+for cam in cams:
+    Initialize_camera(cam,gain,exposureTime)
 print("init_time:",time.time()-starttime)
 
 
@@ -72,7 +136,7 @@ while True:
                 cam.close()
             except:
                 print()
-        [cams,CamNames] = find_cameras(expected_cameras)
+        [cams,CamNames] = find_cameras()
         for cam in cams:
             Initialize_camera(cam)
         print("Reconnected...")
@@ -106,7 +170,7 @@ while True:
             imgs.append(cam.get_array()) # Each image is a numpy array!
         except:
             print("Camera disconnected...")
-            if(len(simple_pyspin.list_cameras()) == expected_cameras):
+            if(len(simple_pyspin.list_cameras()) > len(cams)):
                New_connection=True
                print("will try to reconnect...")
             else:
@@ -137,4 +201,6 @@ while True:
         else:
             print("not saved")
     
-    
+for cam in cams:
+    cam.stop()
+    cam.close()
