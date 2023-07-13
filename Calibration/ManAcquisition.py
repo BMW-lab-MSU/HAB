@@ -70,7 +70,8 @@ def Initialize_camera(cam,gain,exposureTime):
         pass
 #Entering the exposure time desired
 gain = 0
-exposureTime = 4000
+exposureTime = 5000
+
 #important because the calibrations are done with specific filters
 color = "58"
 cal_or_dark = "cal"

@@ -17,12 +17,14 @@ from datetime import date
 import PySpin
 
 
-rotation_stage_offset = 1.5 #1.5 for how Erica does it
+#Blue 440 nm 58
+#Red 660/671 nm 73
+#green 550nm 72
 #Entering the exposure time desired
-gain = 0
-exposureTime = 4000
+gain = 0 #from the grass test it was 58=0 72=0 73=0
+exposureTime = 567.0 #from grass test it was 58=567.0 72=483.0 73=561.0
 #important because the calibrations are done with specific filters
-color = "440nm"
+color = "550nm"
 cal_or_dark = "RadCal" #enter RadCal or Dark
 
 #enering the time between taking images
