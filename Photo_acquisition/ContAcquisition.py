@@ -72,6 +72,7 @@ for i in range(len(cams)):
         if serial_numbs[j] == CamNames[i][-2:]:
             print("init")
             HAB_functions.Initialize_camera(cams[i],gain[j],exposure_time[j])
+
 print("init_time:",time.time()-starttime)
 
 
@@ -124,10 +125,13 @@ starttime = time.time()
 m = 0
 trys = 0
 goods = 0
-for cam in cams:
-    cam.start()
-New_connection = False
 
+for cam in cams:
+    cam.stop()
+    cam.start()
+    cam.get_array()
+New_connection = False
+start = True
 while True:
     #breaks if the button is pressed
     if GPIO.input(31):
@@ -159,6 +163,7 @@ while True:
         write_log.writerow([round((time.time() - starttime),3),m,"Reconnected..."])
         LOG.close()
         for cam in cams:
+            cam.stop()
             cam.start()
         New_connection = False
     m = m+1
@@ -168,23 +173,26 @@ while True:
     #timing, otherwise the pi's internal clock is used
 
     gps.update()
-    time_since_last_frame = 0
-    if gps.has_fix:
-        while time_since_last_frame < int(imageInterval):
-            gps.update()
-            if not gps.has_fix:
-                time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))
-                break
-            HAB_functions.wait_for_edge_gps(7,gps)
-            time_since_last_frame += 1
-            print("GPS:",m)
+    if not start:
+        time_since_last_frame = 0
+        if gps.has_fix:
+            while time_since_last_frame < int(imageInterval):
+                gps.update()
+                if not gps.has_fix:
+                    time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))
+                    break
+                HAB_functions.wait_for_edge_gps(7,gps)
+                time_since_last_frame += 1
+                print("GPS:",m)
+        else:
+            time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
+            print("CLOCK",m)
     else:
-        time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
-        print("CLOCK",m)
+        start = False
         
     imgs = []
     TIME = np.round(time.time()-starttime,3)#time from beginning
-    
+    print(TIME)
     #detects new camera
     if len(simple_pyspin.list_cameras())>len(cams):
         New_connection = True
@@ -195,9 +203,15 @@ while True:
     if goods == 5:
         trys = 0
     i = 0
+    #takes pictures
     while i < (len(cams)):
         try:
-            imgs.append(cams[i].get_array()) # Each image is a numpy array!
+            try:
+                for j in range(100):
+                    current_img = cams[j].get_array()
+            except:
+                pass
+            imgs.append(current_img) # Each image is a numpy array!
             goods +=1
         except:
             goods = 0
@@ -218,7 +232,7 @@ while True:
                 LOG.close()
                 trys +=1
         i+=1
-    
+        
     #gets data from gps
     gps.update()
     GPS_data = HAB_functions.GPS(gps)

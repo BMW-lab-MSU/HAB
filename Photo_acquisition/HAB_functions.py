@@ -28,6 +28,10 @@ def Initialize_camera(cam,gain,exposureTime):
     cam.stop()
     cam.init()
 
+    #if cam.FileAccessBuffer:
+    #    cam.FileAccessBuffer = False
+    if cam.FileAccessLength != 0:
+        cam.FileAccessLength = 0
     # To change the frame rate, we need to enable manual control
     cam.AcquisitionFrameRateEnable = True
     cam.AcquisitionFrameRate = 1
