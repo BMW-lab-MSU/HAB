@@ -55,8 +55,10 @@ print("past gps")
 gps.get_dir()
 
 #makes a new directory with the flight number (just += 1 from the previous)
-cams.DIR_Flights(output_dir)
+cams.DIR_Flights(gps.output_dir)
 gps.output_dir = cams.output_dir
+output_dir = cams.output_dir
+gps.make_csv()
 cams.DIR_cams()
 
 
@@ -70,8 +72,7 @@ LOG.close()
 
 
 starttime = time.time()
-#M shows the frame number, trys and good are here to disconnect the camera if
-#it misses 2 frames
+#m shows the frame number
 m = 0
 
 
@@ -85,33 +86,29 @@ while True:
         write_log.writerow([round((time.time() - starttime),3),m,"Button pressed-loop exited"])
         LOG.close()
         break
+    
     # disconnects and reconnects  all cameras if a new camera is detected
+    TIME = np.round(time.time()-starttime,3)
     if cams.New_connection:
-        cams.Reconnect()
+        print("reconnect")
+        cams.Reconnect(TIME,m)
     m = m+1
         
     #this controls the timing of the pictures being taken, if the pps is available
     #(which is the case when the gps has a fix) then it used the pps from the gps for
     #timing, otherwise the pi's internal clock is used
-
-    gps.frame_timming(imageInterval)
-        
+    gps.frame_timing(imageInterval,starttime,m)
+    TIME = np.round(time.time()-starttime,3)    
     imgs = []
-    TIME = np.round(time.time()-starttime,3)#time from beginning
+    #time from beginning
     print(TIME)
     #detects new camera
-    cams.Detect_cameras()
+    cams.Detect_cameras(TIME,m)
     #takes pictures
-    cams.take_and_save(m,TIME)
+    cams.take_and_save(TIME,m)
         
     #gets data from gps
-    gps.update()
-    GPS_data = HAB_functions.GPS(gps)
-    GPS_data = GPS_data+tuple([str(m)])
-    file = open(output_dir+"/GPS_DATA.csv",'a')
-    write = csv.writer(file)
-    write.writerow(GPS_data)
-    file.close()
+    gps.save_data(m)
     
 
 

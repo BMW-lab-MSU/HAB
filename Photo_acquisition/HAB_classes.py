@@ -7,8 +7,35 @@ import os
 import csv
 import adafruit_gps
 import RPi.GPIO as GPIO
+import serial
+from datetime import date
+
+
+
+"""
+class GPS
+    functions:
+        make_csv():
+            makes cvs that holds gps data
+        get_dir():
+            gets and makes dir based on current day
+        wait_for_edge_gps(pin=pps pin):
+            waits for the pps (pulse per second) pin to show high
+        frame_timing(imageInterval=time between frames,starttime= when to base timing from,frame_num= frame #):
+            waits for an imageInterval amount of time
+        data():
+            gets gps data in a way easy to save to a csv
+        save_data(frame_num=frame #):
+            gets and saves gps data to the csv that make_csv makes
+
+    variables:
+        gps=reference to the GPS object from adafruit_gps
+        output_dir=place where GPC_DATA.csv is saved      
+"""
+
 
 class GPS:
+    #initializes the GPS
     def __init__(self):
         #initializes the pps pin
         GPIO.setmode(GPIO.BOARD)
@@ -20,12 +47,15 @@ class GPS:
         self.gps.send_command(b'PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0') # Turn off everything:
         self.gps.send_command(b'PMTK220,1000')
 
+    #makes the csv that holds the gps data
+    def make_csv(self):
         #makes GPS data file
-        file = open(output_dir+"/GPS_DATA.csv",'w')
+        file = open(self.output_dir+"/GPS_DATA.csv",'w')
         write = csv.writer(file)
         write.writerow(["Latitude","Longitude","Altitude[m]","UTC","Frame"])
         file.close()
-        
+
+    #gets the day from either the gps or system  
     def get_dir(self):
         self.gps.update()
         if self.gps.has_fix:
@@ -40,10 +70,21 @@ class GPS:
                 self.output_dir = DATE
         else:
             self.output_dir = str(date.today())
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
 
-    def frame_timming(self,imageInterval):
+    #waits for the pps on the gps and will break if there is no fix
+    def wait_for_edge_gps(self,pin):
+        while True:
+            self.gps.update()
+            time.sleep(0.05)
+            if GPIO.input(pin) or not self.gps.has_fix:
+                break
+
+    #will wait a number of seconds = imageInterval
+    #starttime is needed if there is no gps fix so the system clock can be used
+    #frame_num is used to print the frame#
+    def frame_timing(self,imageInterval,starttime,frame_num):
         self.gps.update()
 
         time_since_last_frame = 0
@@ -51,15 +92,62 @@ class GPS:
             while time_since_last_frame < int(imageInterval):
                 self.gps.update()
                 if not self.gps.has_fix:
+                    time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))
+                    print("CLOCK",frame_num)
                     break
-                HAB_functions.wait_for_edge_gps(7,gps)
+                self.wait_for_edge_gps(7,self.gps)
                 time_since_last_frame += 1
-                print("GPS:",m)
+                print("GPS:",frame_num)
+        else:
+            time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
+            print("CLOCK",frame_num)
+
+    #gets the gps data to save
+    def data(self):
+        if self.gps.has_fix:
+            Lat = str(self.gps.latitude)
+            Long = str(self.gps.longitude)
+            Height = str(self.gps.altitude_m)
+            TIME = gps.timestamp_utc
+            TIME = TIME[:-3]
+            Time = "-".join([str(i) for i in TIME])
+            return(Lat,Long,Height,Time)
+        else:
+            return("NaN","NaN","NaN","NaN")
+
+    #saves gps data with frame information        
+    def save_data(self,frame_num):
+        self.gps.update()
+        GPS_data = self.data()
+        GPS_data = GPS_data+tuple([str(frame_num)])
+        file = open(self.output_dir+"/GPS_DATA.csv",'a')
+        write = csv.writer(file)
+        write.writerow(GPS_data)
+        file.close()
 
 
-
+"""
+class CAMERAS
+    functions:
+        find_cameras():
+            finds all cameras connected and gets the camera obj and names
+        init_cam_internal(cam,gain,exposureTime):
+        DIR_Flights(self,top_folder):
+        DIR_cams():
+        init_cams():
+        start():
+        Reconnect(self,TIME,frame_num):
+        Detect_cameras(self,TIME,frame_num):
+        take_and_save(self,TIME,frame_num):
+        close():
+    variables:
+        cams = simple_pyspin camera objects
+        CamNames = serial number of the cams
+"""
 
 class CAMERAS:
+    
+    #finds all cameras connected and gets the camera object and the names
     def find_cameras(self):
         cams = []
         Names = []
@@ -68,9 +156,11 @@ class CAMERAS:
             Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
         self.cams = cams
         self.CamNames = Names
-    
-    def __init__(self,serial_numbs=["58","72","73"],wavelengths=["440nm","550nm","671nm"], gain=[0,0,0], exposure_time=[25000,25000,25000],imageInterval="1"):
-        self.serial_numbs = serial_numbs;self.gain = gain;self.exposure_time=exposure_time;self.wavelengths=wavelengths
+
+
+    #gets the names and objects of the cameras and gets what thier settings should be from a settings file
+    def __init__(self,serial_numbs=["58","72","73"],file_endings=["440nm","550nm","671nm"], gain=[0,0,0], exposure_time=[25000,25000,25000]):
+        self.serial_numbs = serial_numbs;self.gain = gain;self.exposure_time=exposure_time;self.file_endings=file_endings
         settings_file = open('Camera_settings.csv','r')
         settings = csv.reader(settings_file,delimiter = ',')
         for line in settings:
@@ -88,6 +178,7 @@ class CAMERAS:
         self.trys = 0
         self.goods = 0
 
+    #sets the settings of the cameras
     def init_cam_internal(self,cam,gain,exposureTime):
         #The camera can't be running while the settings are being changed, hence the
         #cam.stop
@@ -168,7 +259,7 @@ class CAMERAS:
             cam.get_array()
         self.New_connection = False
 
-    def Reconnect(self):
+    def Reconnect(self,TIME,frame_num):
         for cam in self.cams:
             cam.stop()
             cam.close()
@@ -177,22 +268,22 @@ class CAMERAS:
         self.DIR_cams()
         LOG = open(self.output_dir+"/Log.csv",'a')
         write_log = csv.writer(LOG)
-        write_log.writerow([round((time.time() - starttime),3),m,"Reconnected..."])
+        write_log.writerow([round((TIME),3),frame_num,"Reconnected..."])
         LOG.close()
         self.start()
         self.New_connection = False
 
-    def Detect_cameras(self):
+    def Detect_cameras(self,TIME,frame_num):
         if len(simple_pyspin.list_cameras())>len(self.cams):
             self.New_connection = True
             LOG = open(self.output_dir+"/Log.csv",'a')
             write_log = csv.writer(LOG)
-            write_log.writerow([round((time.time() - starttime),3),m,"Will try to reconnect..."])
+            write_log.writerow([round((TIME),3),frame_num,"Will try to reconnect..."])
             LOG.close()
         if self.goods == 5:
             self.trys = 0
 
-    def take_and_save(self,m,TIME):
+    def take_and_save(self,TIME,frame_num):
         i =0
         imgs=[]
         while i < (len(self.cams)):
@@ -211,17 +302,17 @@ class CAMERAS:
                 if self.trys >=2:
                     LOG = open(self.output_dir+"/Log.csv",'a')
                     write_log = csv.writer(LOG)
-                    write_log.writerow([round((time.time() - starttime),3),m,"camera "+CamNames[i]+" disconnected..."])
+                    write_log.writerow([round((TIME),3),frame_num,"camera "+self.CamNames[i]+" disconnected..."])
                     LOG.close()
                     self.cams = np.delete(self.cams,i,0)
                     self.CamNames.pop(i)
                     self.trys = 0
                     i-=1
                 else:
-                    self.imgs.append(None)
+                    imgs.append(None)
                     LOG = open(self.output_dir+"/Log.csv",'a')
                     write_log = csv.writer(LOG)
-                    write_log.writerow([round((time.time() - starttime),3),m,"img skipped"])
+                    write_log.writerow([round((TIME),3),frame_num,"img skipped"])
                     LOG.close()
                     self.trys +=1
             i+=1
@@ -229,12 +320,10 @@ class CAMERAS:
         #saving the images as numpy arrays
         for i in range(len(self.cams)):
             for i in range(len(self.cams)):
-                print(self.CamNames[i][-2:])
                 for j in range(len(self.serial_numbs)):
                     if self.serial_numbs[j] == self.CamNames[i][-2:]:
-                        print("init")
-                        wave = self.wavelengths[j]
-            filename = "F"+str(m).zfill(5)+"-T"+str(TIME)+"-G"+str(self.cams[i].Gain)+"-E"+str(self.cams[i].ExposureTime)+"-"+wave
+                        file_ending = self.file_endings[j]
+            filename = "F"+str(frame_num).zfill(5)+"-T"+str(TIME)+"-G"+str(self.cams[i].Gain)+"-E"+str(self.cams[i].ExposureTime)+"-"+file_ending
             filename = filename.replace(".","_",3)
             
             #makes sure the image exists
