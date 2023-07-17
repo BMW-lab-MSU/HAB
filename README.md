@@ -69,11 +69,11 @@ In our current set up this has a systemd file that causes the file to be run on 
 
 - Automates the polarization calibration and will send me a text when done
 
-###pol_controler.py
+### pol_controler.py
 
 - contains class that controles the polarization rotation stage
 
-###Rad_cal.py
+### Rad_cal.py
 
 - similar to ManAcquisition.py except changed to have same file structure as polarization_cal.py and to allow for the current of the integrating sphere to be input into the file name
 
