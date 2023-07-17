@@ -84,7 +84,7 @@ In our current set up this has a systemd file that causes the file to be run on 
 - Describes the set up
 	
 
-##Other notes:
+## Other notes:
 
 - There is a possibility that your GPS will have a different divice address use the comand "dmesg | grep tty" and there will not be many options
 
