@@ -131,18 +131,37 @@ class CAMERAS
     functions:
         find_cameras():
             finds all cameras connected and gets the camera obj and names
-        init_cam_internal(cam,gain,exposureTime):
+        init_cam_internal(cam = simple_pyspin cam obj,gain,exposureTime):
+            turns off all auto settings and sets gain and exposure time to what is input. 
         DIR_Flights(self,top_folder):
+            makes flight folder in top_folder
         DIR_cams():
+            makes camera folders
         init_cams():
+            inits cams and calls init_cam_internal with the correct gain and exposure time
         start():
-        Reconnect(self,TIME,frame_num):
-        Detect_cameras(self,TIME,frame_num):
-        take_and_save(self,TIME,frame_num):
+            starts taking photos
+        Reconnect(self,TIME = time passed since first frame,frame_num = frame number):
+            reconnects the cameras (used if one drops out and then is detected again, or if a new camera is detected)
+        Detect_cameras(self,TIME = time passed since first frame,frame_num = frame number):
+            Detects if new cameras are connected
+        take_and_save(self,TIME = time passed since first frame,frame_num = frame number):
+            takes and saves pictures to the folder created in the DIR functions
         close():
+            properly closes cameras
+            
     variables:
         cams = simple_pyspin camera objects
         CamNames = serial number of the cams
+        serial_numbs = serial numbres of the cameras
+        gain = gain for each of the cameras
+        exposure_time = exposure time of each of the cameras
+        file_endings = endings of each of the files by camera (not a file extention but a way to tell the files apart)
+        trys = times the camera has failed to take a picture
+        goods = times in a row the camera has taken a picture
+        output_dir = where images are saved
+        New_connection = bool describing if a new connection has been found
+        
 """
 
 class CAMERAS:
