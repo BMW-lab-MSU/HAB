@@ -1,5 +1,4 @@
 #To get avg exposure time and gain
-import HAB_functions
 from simple_pyspin import Camera
 from PIL import Image
 import os
@@ -14,6 +13,15 @@ import RPi.GPIO as GPIO
 #sets up button
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(31,GPIO.IN,pull_up_down = GPIO.PUD_DOWN)
+
+#This function searches for all cameras and outputs [cameras, names]
+def find_cameras():
+    cams = []
+    Names = []
+    for i in range(len(simple_pyspin.list_cameras())):
+        cams = np.append(cams,Camera(i))
+        Names.append(PySpin.CStringPtr(Camera(i).cam.GetTLDeviceNodeMap().GetNode('DeviceSerialNumber')).GetValue())
+    return(cams,Names)
 
 #similar to the function in HAB_functions, except the auto gain and exposure are set to cont
 def initialize_camera(cam):
@@ -53,12 +61,12 @@ imageInterval = "1"
 #gets current time so that it can check when the last time the exposure and gain was updated
 DATE = str(datetime.utcnow())
 
-[cams,CamNames] = HAB_functions.find_cameras()
+[cams,CamNames] = find_cameras()
 for cam in cams:
     cam.stop()
     cam.close()
 
-[cams,CamNames] = HAB_functions.find_cameras()
+[cams,CamNames] = find_cameras()
 for cam in cams:
     initialize_camera(cam)
 starttime = time.time()
@@ -87,12 +95,9 @@ while True:
                 pass
         cams = []
         CamNames = []
-        [cams,CamNames] = HAB_functions.find_cameras()
+        [cams,CamNames] = find_cameras()
         for cam in cams:
-            HAB_functions.Initialize_camera(cam)
-        for camera in CamNames:
-            if not os.path.exists(output_dir+"/"+camera):
-                os.makedirs(output_dir+"/"+camera)
+            initialize_camera(cam)
         print("Reconnected...")
     m = m+1
     if New_connection:
