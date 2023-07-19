@@ -5,7 +5,7 @@ import csv
 
 #without this sleep an error is thrown about not having access to the GPIO pins
 #which is also done at start up
-time.sleep(3)
+time.sleep(30)
 #if the current time is this much greater than the previous then the settings will be redone
 redo_settings_time = 1800 #seconds
 
