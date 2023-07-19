@@ -1,5 +1,4 @@
 #ContAcquisition.py
-import HAB_functions
 from simple_pyspin import Camera
 from PIL import Image
 import os
@@ -50,7 +49,7 @@ print("init_time:",time.time()-starttime)
 # Make a directory to save some images
 # It is set up such that a new folder with the date/flight# is created
 #first the gps is used to see if it can find the current date
-time.sleep(5)
+time.sleep(0.1)
 print("past gps")
 gps.get_dir()
 

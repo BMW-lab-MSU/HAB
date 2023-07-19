@@ -86,7 +86,7 @@ class GPS:
     #frame_num is used to print the frame#
     def frame_timing(self,imageInterval,starttime,frame_num):
         self.gps.update()
-
+        print(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))
         time_since_last_frame = 0
         if self.gps.has_fix:
             while time_since_last_frame < int(imageInterval):
@@ -95,7 +95,7 @@ class GPS:
                     time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))
                     print("CLOCK",frame_num)
                     break
-                self.wait_for_edge_gps(7,self.gps)
+                self.wait_for_edge_gps(7)
                 time_since_last_frame += 1
                 print("GPS:",frame_num)
         else:
@@ -108,7 +108,7 @@ class GPS:
             Lat = str(self.gps.latitude)
             Long = str(self.gps.longitude)
             Height = str(self.gps.altitude_m)
-            TIME = gps.timestamp_utc
+            TIME = self.gps.timestamp_utc
             TIME = TIME[:-3]
             Time = "-".join([str(i) for i in TIME])
             return(Lat,Long,Height,Time)
@@ -178,13 +178,13 @@ class CAMERAS:
 
 
     #gets the names and objects of the cameras and gets what thier settings should be from a settings file
-    def __init__(self,serial_numbs=["58","72","73"],file_endings=["440nm","550nm","671nm"], gain=[0,0,0], exposure_time=[25000,25000,25000]):
+    def __init__(self,serial_numbs=["58","72","73"],file_endings=["440nm","550nm","660nm"], gain=[0,0,0], exposure_time=[25000,25000,25000]):
         self.serial_numbs = serial_numbs;self.gain = gain;self.exposure_time=exposure_time;self.file_endings=file_endings
         settings_file = open('Camera_settings.csv','r')
         settings = csv.reader(settings_file,delimiter = ',')
         for line in settings:
             for i in range(len(serial_numbs)):
-                if line[0][-2:] == serial_numbs[i]:
+                if line[0] == "220277"+serial_numbs[i]:
                     self.gain[i] = float(line[1])
                     if float(line[2])>=100:
                         self.exposure_time[i] = float(line[2])
@@ -245,11 +245,9 @@ class CAMERAS:
             cam.ChunkModeActive = False
         # once this is changed once it cant be changed agian while the camera has power
         #the try statement is to prevent a crash in the event it has already been set
-        try:
+        if cam.PixelFormat != "Mono16":
             cam.PixelFormat = "Mono16"
-        except:
-            pass
-
+            
     def DIR_Flights(self,top_folder):
         flights = os.listdir(top_folder)
         flight_numb = str(len(flights)+1)
@@ -275,7 +273,10 @@ class CAMERAS:
         for cam in self.cams:
             cam.stop()
             cam.start()
-            cam.get_array()
+            try:
+                cam.get_array()
+            except:
+                pass
         self.New_connection = False
 
     def Reconnect(self,TIME,frame_num):
@@ -308,8 +309,7 @@ class CAMERAS:
         while i < (len(self.cams)):
             current_img = "text"
             try:
-                for j in range(100):
-                    current_img = self.cams[j].get_array()
+                current_img = self.cams[i].get_array()
             except:
                 pass
             
@@ -335,12 +335,11 @@ class CAMERAS:
                     LOG.close()
                     self.trys +=1
             i+=1
-
+        
         #saving the images as numpy arrays
         for i in range(len(self.cams)):
-            for i in range(len(self.cams)):
-                for j in range(len(self.serial_numbs)):
-                    if self.serial_numbs[j] == self.CamNames[i][-2:]:
+            for j in range(len(self.serial_numbs)):
+                    if "220277"+self.serial_numbs[j] == self.CamNames[i]:
                         file_ending = self.file_endings[j]
             filename = "F"+str(frame_num).zfill(5)+"-T"+str(TIME)+"-G"+str(self.cams[i].Gain)+"-E"+str(self.cams[i].ExposureTime)+"-"+file_ending
             filename = filename.replace(".","_",3)
