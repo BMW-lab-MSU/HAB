@@ -7,7 +7,7 @@ from multiprocessing import Pool
 #converts all np images in a folder to png and creates a gif
 
 def numpy_to_png(camera):
-    directory = "/media/flint/Elements/HAB/2023-07-07-CAL/440nm/cal_1/"
+    directory = "/media/flint/Elements/HAB/2023-07-20/Flight_3/"
     dir = directory+"/220277"+camera
     png_dir = directory+"/pngs"+camera
     #makes png directorys
@@ -27,11 +27,11 @@ def numpy_to_png(camera):
     os.system("ffmpeg -framerate 5 -pattern_type glob -i '"+png_dir+"/*.png' "+directory+"/"+camera+".mp4")
 
 #par loop
-"""
+
 with Pool(6) as p:
     p.map(numpy_to_png,["58","72","73"])
-"""
-numpy_to_png("58")
+
+
 
 
 print("Done")
