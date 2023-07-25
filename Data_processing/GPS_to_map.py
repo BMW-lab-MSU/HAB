@@ -1,7 +1,7 @@
 import plotly.express as px
 import pandas as pd
-from plotly.offline import plot
-directory = "/media/flint/Elements/HAB/2023-07-20/Flight_3/"
+#from plotly.offline import plot
+directory = "Z:2023-07-24/Flight_1/"
 df = pd.read_csv(directory+"GPS_DATA.csv")
 types = ['open-street-map', 'white-bg', 'carto-positron', 'carto-darkmatter', 'stamen-terrain', 'stamen-toner', 'stamen-watercolor']
 
@@ -12,7 +12,7 @@ fig = px.scatter_mapbox(df,
                         lat="Latitude", 
                         lon="Longitude", 
                         hover_name="UTC", 
-                        hover_data=["UTC", "Altitude[m]"],
+                        hover_data=["UTC", "Frame"],
                         color="Altitude[m]",
                         color_continuous_scale=color_scale,
                         
@@ -23,4 +23,4 @@ fig = px.scatter_mapbox(df,
 fig.update_layout(mapbox_style=types[0])
 
 fig.show()
-plot(fig)
+#plot(fig)

@@ -30,9 +30,12 @@ def raw_to_stokes_mono(raw):
 
 def false_color(DIR,frame):
     cams=["22027758","22027772","22027773"]
-    
+    P = [[42.5,-340.0,1049.5,-1161.5],[68.0,-655.5,2472.0,-3293.0],[34.5,-213.5,553.0,-542]]
+    print(DIR)
     for cameras in os.listdir(DIR):
         if cameras in cams:
+            index = cams.index(cameras)
+            p = P[index]
             for image_file in os.listdir(DIR+"/"+cameras):
                 if frame in image_file:
                     plt.figure(figsize=(12,5.5))
@@ -73,19 +76,42 @@ def false_color(DIR,frame):
                     plt.pcolor(S2,vmin = 2*np.mean(S2), vmax=0)
                     plt.colorbar()
                     plt.gca().invert_yaxis()
-                    plt.title(image_file[-9:-4]+ " S2 Frame:"+str(frame))
+                    plt.title(image_file[-9:-4].replace("n"," n")+ " S2 Frame:"+str(frame))
                     plt.tight_layout()
+
+                    
+                    c_over_a = p[3]*(DoLP**3)+p[2]*(DoLP**2)+p[1]*(DoLP)+p[0]
+                    print("c/a:",np.min(c_over_a),np.max(c_over_a))
+                    print("mean:",np.mean(c_over_a))
+                    plt.subplot(2,3,6)
+                    if 2*np.mean(c_over_a)<0:
+                        plt.pcolor(c_over_a,vmin=2*np.mean(c_over_a),vmax=10)
+                    else:
+                        plt.pcolor(c_over_a,vmax=2*np.mean(c_over_a),vmin=-10)
+                    plt.colorbar()
+                    plt.gca().invert_yaxis()
+                    plt.title(image_file[-9:-4].replace("n"," n")+ " c/a Frame:"+str(frame))
+                    plt.tight_layout()
+                    
                     plt.show()
+                    
+                    
                     
     
     print("done")
     
 
     
-#f99 flight 5
-#f276 flight 1
-frame = "F00005"
-false_color("/media/flint/Elements/HAB/2023-07-21/Flight_1", frame)
+
+#440-713
+numbs = np.arange(440,721,20)
+frames = []
+for num in numbs:
+    frames.append("F00"+str(num))
+
+for frame in frames:
+    print("\nFrame: "+frame)
+    false_color("Z:2023-07-24\Flight_1", frame)
 #s0_s1_s2("/media/flint/Elements/HAB/2023-07-19/Flight_1/22027758", frame)
 #s0_s1_s2("/media/flint/Elements/HAB/2023-07-19/Flight_1/22027772", frame)
 #DoLP=s0_s1_s2("/media/flint/Elements/HAB/2023-07-19/Flight_1/22027773", frame)
