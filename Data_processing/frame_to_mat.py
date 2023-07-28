@@ -25,5 +25,6 @@ def false_color_DoLP(DIR,frame):
                     mat_dir = DIR+"/"+image_file[:-4]+".mat"
                     scipy.io.savemat(mat_dir, {"image":image_np})
 #converts all np images in a folder to mat and creates a dir for them
-frame = "F00099"
-false_color_DoLP("/media/flint/Elements/HAB/2023-07-19/Flight_5", frame)
+frame = "F00460"
+directory = "/mnt/data/HAB/Flathead-July-2023/2023-07-24/Flight_1"
+false_color_DoLP(directory, frame)
