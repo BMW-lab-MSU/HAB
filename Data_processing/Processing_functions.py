@@ -10,6 +10,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors as colors
+import pandas as pd
 
 def raw_to_stokes_mono(raw):
     I90 = raw.astype(float)[::2,::2]
@@ -103,8 +104,17 @@ def false_color(DIR,frame):
     print("done")
     
 
-    
+def frames_above_height(DIR,h):
+    df = pd.read_csv(DIR+"GPS_DATA.csv")
 
+    frames_int = df["Frame"][df["Altitude[m]"]>h]
+    frames = []
+    for frame in frames_int:
+        frames.append("F"+str(frame).zfill(5))
+    return(frames)   
+
+
+"""
 #440-713
 numbs = np.arange(440,721,20)
 frames = []
@@ -117,3 +127,4 @@ for frame in frames:
 #s0_s1_s2("/media/flint/Elements/HAB/2023-07-19/Flight_1/22027758", frame)
 #s0_s1_s2("/media/flint/Elements/HAB/2023-07-19/Flight_1/22027772", frame)
 #DoLP=s0_s1_s2("/media/flint/Elements/HAB/2023-07-19/Flight_1/22027773", frame)
+"""
