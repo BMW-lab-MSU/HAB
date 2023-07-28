@@ -112,7 +112,7 @@ while True:
 
 
 #shutdown camera,GPIO pins, and the auto run feature
-cams.close()
+cams.cleanup()
 GPIO.cleanup()
 os.system("sudo systemctl stop HAB")
 LOG = open(output_dir+"/Log.csv",'a')

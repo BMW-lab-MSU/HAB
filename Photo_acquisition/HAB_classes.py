@@ -354,3 +354,7 @@ class CAMERAS:
         for cam in self.cams:
             cam.stop()
             cam.close()
+    
+    def cleanup(self):
+        self.close()
+        os.system('mv Camera_settings.csv '+self.output_dir+"/")

@@ -5,7 +5,7 @@ import csv
 
 #without this sleep an error is thrown about not having access to the GPIO pins
 #which is also done at start up
-time.sleep(30)
+time.sleep(3)
 #if the current time is this much greater than the previous then the settings will be redone
 redo_settings_time = 1800 #seconds
 
@@ -35,14 +35,12 @@ DATE = datetime.utcnow()
 try:
     settings_file = open('Camera_settings.csv','r')
     settings = csv.reader(settings_file,delimiter = ',')
-    current_settings = False
+
     for line in settings:
         file_date = datetime.fromisoformat(line[0])
         break
     print("File_date",str(file_date))
-    print("delta_time",abs((file_date-DATE).total_seconds()))
-    if abs((file_date-DATE).total_seconds())<redo_settings_time:
-        current_settings = True
+    current_settings = True
     settings_file.close()
 except:
     current_settings = False
