@@ -11,17 +11,18 @@ def polarization_cal(DIR):
     to_remove="nPolCalGETIimgDegr_"
     
     for image_file in os.listdir(DIR):
-        name = image_file[:-4];name = name.replace("_",".")
-        for char in to_remove: name = name.replace(char,"")
-        name = name.replace("--","-")
-        info = [float(x) for x in name.split("-")]
-        try:
-            image_np = np.load(DIR+"/"+image_file)
-            photos[:,:,int(info[1]/15)]=photos[:,:,int(info[1]/15)]+(0.2*image_np)
-
-        except:
-            print("\n not numpy:"+DIR+"/",image_file)
-            return
+        if "polcal" in image_file.lower():
+            name = image_file[:-4];name = name.replace("_",".")
+            for char in to_remove: name = name.replace(char,"")
+            name = name.replace("--","-")
+            info = [float(x) for x in name.split("-")]
+            try:
+                image_np = np.load(DIR+"/"+image_file)
+                photos[:,:,int(info[1]/15)]=photos[:,:,int(info[1]/15)]+(0.2*image_np)
+    
+            except:
+                print("\n not numpy:"+DIR+"/",image_file)
+                return
     mdic = {"angles":angles,"deg_pol":deg_pol,"exposure":info[4],"gain":info[-1],"image_array": photos}
     return(mdic)
 
@@ -58,9 +59,8 @@ def npy_to_mat(cal_day):
                 print("\nsaved: "+mat_dir)
 
 
-directorys = ["/media/flint/Elements/HAB/2023-07-12-CAL/"]
-with Pool(6) as p:
-    p.map(npy_to_mat,directorys)
+directorys = ["/media/flint/Elements/HAB/2023-08-02-CAL/"]
+npy_to_mat(directorys[0])
 print("Done")
 
 #file_path = 'data.mat'

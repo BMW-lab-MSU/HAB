@@ -24,7 +24,9 @@ import PySpin
 gain = 0 #from the grass test it was 58=0 72=0 73=0
 exposureTime = 567.0 #from grass test it was 58=567.0 72=483.0 73=561.0
 #important because the calibrations are done with specific filters
-color = "550nm"
+Possible_cameras = ["22027758","22027772","22027773"]
+colors = ["440nm","550nm","660nm"]
+
 cal_or_dark = "RadCal" #enter RadCal or Dark
 
 #enering the time between taking images
@@ -46,6 +48,10 @@ CamNames = []
 [cams,CamNames] = Cal_functions.find_cameras()   
 for cam in cams:
     Cal_functions.Initialize_camera(cam,gain,exposureTime)
+for name in CamNames:
+    for i in range(len(Possible_cameras)):
+        if name == Possible_cameras[i]:
+            color = colors[i]
 print("init_time:",time.time()-starttime)
 CamNames[0] = color+"-"+CamNames[0]
 
@@ -71,7 +77,7 @@ pic_numb = 0
 #row and then waits for an input for the next set of images
 #it is also important to note that this code is currently set up for degrees
 #which represent the angle of the polarizer, but that can be easily changed
-current = input("\nEnter current of integrating sphere [uA]")
+current = input("\nEnter current of integrating sphere [uA]:")
 
 crash = False
 while True:
