@@ -8,8 +8,8 @@ import numpy as np
 import PySpin
 
 #Entering the exposure time desired
-gain = 0
-exposureTime = 5000
+gain = 12.460766915206191
+exposureTime = 14316.244444444443
 
 
 def find_cameras():
@@ -169,10 +169,18 @@ while True:
 
         #Image.fromarray(imgs[i]).save(os.path.join(output_dir+"/"+CamNames[i]+"/"+filename)) #Files named based on m
         if type(imgs[i]) != type(None):
+            raw = imgs[i]
+            I90 = raw.astype(float)[::2,::2]
+            I45 = raw.astype(float)[::2,1::2]
+            I0  = raw.astype(float)[1::2,1::2]
+            I135= raw.astype(float)[1::2,::2]
             print("min:",np.amin(imgs[i]))
             print("max:",np.amax(imgs[i]))
             print("mean:",np.mean(imgs[i]))
-
+            print("I90:",np.mean(I90))
+            print("I45:",np.mean(I45))
+            print("I0:",np.mean(I0))
+            print("I135:",np.mean(I135))
             
         else:
             print("Img not taken")
