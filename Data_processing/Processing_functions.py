@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors as colors
 import pandas as pd
+import plotly.express as px
+from plotly.offline import plot
+import scipy.io
 
 def raw_to_stokes_mono(raw):
     I90 = raw.astype(float)[::2,::2]
@@ -114,6 +117,43 @@ def frames_above_height(DIR,h):
     return(frames)   
 
 
+def GPS_to_map(directory, style = 0):
+    df = pd.read_csv(directory+"GPS_DATA.csv")
+    types = ['open-street-map', 'white-bg', 'carto-positron', 'carto-darkmatter', 'stamen-terrain', 'stamen-toner', 'stamen-watercolor']
+    
+    
+    color_scale = [(0, 'blue'), (1,'orange')]
+    
+    fig = px.scatter_mapbox(df, 
+                            lat="Latitude", 
+                            lon="Longitude", 
+                            hover_name="UTC", 
+                            hover_data=["UTC", "Frame"],
+                            color="Altitude[m]",
+                            color_continuous_scale=color_scale,
+                            
+                            zoom=15, 
+                            height=800,
+                            width=800)
+    
+    fig.update_layout(mapbox_style=types[style])
+    
+    fig.show()
+    plot(fig)
+
+
+def Frame_to_Mat(DIR,frame):
+    cams=["22027758","22027772","22027773"]
+    
+    for cameras in os.listdir(DIR):
+        if cameras in cams:
+            for image_file in os.listdir(DIR+"/"+cameras):
+                if frame in image_file:
+                    print(DIR+"/"+cameras+"/"+image_file)
+                    image_np = np.load(DIR+"/"+cameras+"/"+image_file)
+                    print("past")
+                    mat_dir = DIR+"/"+image_file[:-4]+".mat"
+                    scipy.io.savemat(mat_dir, {"image":image_np})
 """
 #440-713
 numbs = np.arange(440,721,20)

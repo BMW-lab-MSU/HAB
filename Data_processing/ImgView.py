@@ -24,7 +24,7 @@ def numpy_to_png(camera):
         except:
             print(image_file)
     #makes gif in linux if ffmpeg is installed
-    #os.system("ffmpeg -framerate 5 -pattern_type glob -i '"+png_dir+"/*.png' "+directory+"/"+camera+".mp4")
+    os.system("ffmpeg -framerate 5 -pattern_type glob -i '"+png_dir+"/*.png' "+directory+"/"+camera+".mp4")
 
 #par loop
 """
