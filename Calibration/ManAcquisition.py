@@ -1,3 +1,8 @@
+"""
+Created on Jun 25 2023
+
+@author: Flint Morgan
+"""
 #ManAcquisition.py
 #this script is for calibration purposes and will make a file labeled with the date and CAL
 
