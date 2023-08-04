@@ -1,3 +1,9 @@
+"""
+Created on Jul 24 2023
+
+@author: Flint Morgan
+"""
+
 import simple_pyspin
 import time
 import numpy as np
