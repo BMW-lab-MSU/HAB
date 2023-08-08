@@ -24,7 +24,6 @@ def GPS_correction(CurGPS,NxtGPS,Altitude,lakeAlt = 882.0):
     # The solution is to normalize the initial bearing as shown below
     initial_bearing = math.degrees(initial_bearing)
     compass_bearing = (initial_bearing + 360) % 360
-    print(initial_bearing,compass_bearing)
     cb = np.deg2rad(compass_bearing)
     unit_vec = np.array([np.cos(cb),np.sin(cb)])
     vec = unit_vec*Magnitude
@@ -32,23 +31,33 @@ def GPS_correction(CurGPS,NxtGPS,Altitude,lakeAlt = 882.0):
     vec[1] /= np.cos(np.deg2rad(NxtGPS[0]))
     point = vec+CurGPS_np
 
-    return(point)
+    return(point[0],point[1])
     
     
 
-directory = "/home/flint/Downloads/"
+directory = "/mnt/data/HAB/Flathead-July-2023/2023-07-24/Flight_1/"
 df = pd.read_csv(directory+"GPS_DATA.csv")
 
 LakeSurfaceAltitude_m = 882
-Frame = df.values[0,4]
+Lat_pic = []
+Lon_pic = []
+for i in range(len(df["Frame"])-1):
+    CurGPS = [df["Latitude"][i],df["Longitude"][i]]
 
-CurLat = df.values[Frame-1,0]
-CurLon = df.values[Frame-1,1]
-DroneAltitude_m = df.values[Frame-1,2]
+    DroneAltitude_m = df["Altitude[m]"][i]
+    
+    NxtGPS = [df["Latitude"][i+1],df["Longitude"][i+1]]
+    
+    [lat,lon] = GPS_correction(CurGPS, NxtGPS, DroneAltitude_m)
+    Lat_pic.append(lat)
+    Lon_pic.append(lon)
 
-NxtLat = df.values[Frame,0]
-NxtLon = df.values[Frame,1]
-NxtDroneAltitude_m = df.values[Frame,2]
+Lat_pic.append("")
+Lon_pic.append("")
 
-v = GPS_correction([np.float128(CurLat),np.float128(CurLon)], [np.float128(NxtLat),np.float128(NxtLon)],DroneAltitude_m)
-print(v)
+df["Image_Latitude"] = Lat_pic
+df["Image_Longitude"] = Lon_pic
+df.to_csv(directory+"GPS_DATA.csv")
+print(df)   
+    
+
