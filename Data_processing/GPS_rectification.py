@@ -8,6 +8,8 @@ Created on Mon Aug  7 10:31:32 2023
 import pandas as pd
 import numpy as np
 import math
+from pysolar.solar import get_azimuth,get_altitude
+import datetime as dt
 
 def GPS_correction(CurGPS,NxtGPS,Altitude,lakeAlt = 882.0):
     CurGPS_np = np.array(CurGPS)
@@ -57,7 +59,23 @@ Lon_pic.append("")
 
 df["Image_Latitude"] = Lat_pic
 df["Image_Longitude"] = Lon_pic
-df.to_csv(directory+"GPS_DATA.csv")
-print(df)   
+
+
     
+
+date = []
+for time in df["UTC"]:
+    TIME = [int(i) for i in time.split("-")]
+    date.append(dt.datetime(TIME[0],TIME[1],TIME[2],TIME[3],TIME[4],TIME[5],tzinfo=dt.timezone.utc))
+
+azimuth = []
+altitude = []
+for i in range(len(date)):
+    altitude.append(get_altitude(df["Latitude"][i],df["Longitude"][i],date[i]))
+    azimuth.append(get_azimuth(df["Latitude"][i],df["Longitude"][i],date[i]))
+    
+df["Sun_Altitude"] = altitude
+df["Sun_Azimuth"] = azimuth
+df.to_csv(directory+"GPS_DATA.csv")
+print(df)
 
