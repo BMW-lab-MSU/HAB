@@ -9,9 +9,10 @@ def polarization_cal(DIR):
     angles = [0,-15,-30,-45,-60,-75,-90,-105,-120,-135,-150,-165,-180,-195,-210,-225,-240,-255,-270,-285,-300,-315,-330,-345,-360]
     photos = np.empty([2048,2448,len(deg_pol)])
     to_remove="nPolCalGETIimgDegr_"
-    
+    numb_pol = 0
     for image_file in os.listdir(DIR):
         if "polcal" in image_file.lower():
+            numb_pol +=1
             name = image_file[:-4];name = name.replace("_",".")
             for char in to_remove: name = name.replace(char,"")
             name = name.replace("--","-")
@@ -23,8 +24,11 @@ def polarization_cal(DIR):
             except:
                 print("\n not numpy:"+DIR+"/",image_file)
                 return
-    mdic = {"angles":angles,"deg_pol":deg_pol,"exposure":info[4],"gain":info[-1],"image_array": photos}
-    return(mdic)
+    if numb_pol>0:
+        mdic = {"angles":angles,"deg_pol":deg_pol,"exposure":info[4],"gain":info[-1],"image_array": photos}
+        return(mdic)
+    else:
+        return("NoPol")
 
 def dark_cal(DIR):
     to_remove="GETimg_"
@@ -52,14 +56,15 @@ def npy_to_mat(cal_day):
         else:
             DIR = cal_day+camera
             if not "mat" in camera.lower() and "nm" in camera.lower():
-                mat_dir = cal_day+"/"+camera+"-cal.mat"
+                mat_dir = cal_day+"/"+camera+"-PolCal.mat"
                 mdic=polarization_cal(DIR)
-                print("\nsaving: "+mat_dir)
-                scipy.io.savemat(mat_dir, mdic)
-                print("\nsaved: "+mat_dir)
+                if mdic != "NoPol":
+                    print("\nsaving: "+mat_dir)
+                    scipy.io.savemat(mat_dir, mdic)
+                    print("\nsaved: "+mat_dir)
 
 
-directorys = ["/media/flint/Elements/HAB/2023-08-02-CAL/"]
+directorys = ["/mnt/data/HAB/2023-08-04-CAL/"]
 npy_to_mat(directorys[0])
 print("Done")
 
