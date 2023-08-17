@@ -21,8 +21,8 @@ import PySpin
 #Red 660/671 nm 73
 #green 550nm 72
 #Entering the exposure time desired
-gain = 0 #from the grass test it was 58=0 72=0 73=0
-exposureTime = 567.0 #from grass test it was 58=567.0 72=483.0 73=561.0
+gain = 12.460766915206191
+exposureTime = 14316.244444444443
 #important because the calibrations are done with specific filters
 Possible_cameras = ["22027758","22027772","22027773"]
 colors = ["440nm","550nm","660nm"]
@@ -53,7 +53,8 @@ for name in CamNames:
         if name == Possible_cameras[i]:
             color = colors[i]
 print("init_time:",time.time()-starttime)
-CamNames[0] = color+"-"+CamNames[0]
+CamNames[0] = color+"-"+CamNames[0]+"-E"+str(exposureTime)+"-G"+str(gain)
+CamNames[0] = CamNames[0].replace(".", "_")
 
 # Make a directory to save some images
 # It is set up such that a new folder with the date_CAL/flight# is created
