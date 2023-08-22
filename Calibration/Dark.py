@@ -1,40 +1,34 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul 12 10:15:12 2023
+Created on Mon Aug 21 15:58:21 2023
 
 @author: Flint Morgan
 """
-#Rad_cal.py
-#this script is for calibration purposes and will make a file labeled with the date and CAL
 import Cal_functions
 from simple_pyspin import Camera
 import os
 import time
 import simple_pyspin
 import numpy as np
+import pandas as pd
 from datetime import date
 import PySpin
-import pandas as pd
-
-
 #Blue 440 nm 58
 #Red 660/671 nm 73
 #green 550nm 72
+
 #Entering the exposure time desired
-gain = 12.460766915206191
-exposureTime = 14316.244444444443
-def rad(gain,exposureTime, output_dir):
-    #important because the calibrations are done with specific filters
+
+#gain = 10.721805051364594
+#exposureTime = 14407.615384615385
+#important because the calibrations are done with specific filters
+
+
+def Dark_cal(exposureTime,gain,output_dir):
     Possible_cameras = ["22027758","22027772","22027773"]
     colors = ["440nm","550nm","660nm"]
-    
-    cal_or_dark = "RadCal" #enter RadCal or Dark
-    
     #enering the time between taking images
     imageInterval = "1"
-    
-    
     #initialize the cameras and set settings
     starttime = time.time()
     [cams,CamNames] = Cal_functions.find_cameras()
@@ -60,7 +54,8 @@ def rad(gain,exposureTime, output_dir):
     
     # Make a directory to save some images
     # It is set up such that a new folder with the date_CAL/flight# is created
-    
+
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
@@ -75,29 +70,23 @@ def rad(gain,exposureTime, output_dir):
         cam.start()
     
     pic_numb = 0
-    
+    time.sleep(2)
     #This code is similar to what is in cont aquisition, except it takes 5 pictures in a
     #row and then waits for an input for the next set of images
     #it is also important to note that this code is currently set up for degrees
     #which represent the angle of the polarizer, but that can be easily changed
-    current = input("\nEnter current of integrating sphere [uA]:")
-    
     crash = False
     while True:
         m = m+1
         print("tick number: ",m)
+        
+        
         time.sleep(int(imageInterval) - ((time.time() - starttime) % int(imageInterval)))#ticks every 1 second
+    
         
         if pic_numb >=5:
-            if cal_or_dark.lower() == "dark":
-                break
             print()
-            current = input("\nEnter current of integrating sphere [uA](stop, q, or quit will quit program):")
-            if "q" in current.lower() or current.lower() == "stop":
-                break
-    
-            
-            pic_numb=0
+            break
         
         print(time.time()-starttime)
     
@@ -108,6 +97,7 @@ def rad(gain,exposureTime, output_dir):
         for cam in cams:
             cam.stop()
             cam.start()
+            time.sleep(0.1)
             try:
                 imgs.append(cam.get_array()) # Each image is a numpy array!
             except:
@@ -124,9 +114,8 @@ def rad(gain,exposureTime, output_dir):
             
             filename = "Img"+str(pic_numb)+"-E"+str(cams[i].ExposureTime)+"-T"+str(TIME)+"-G"+str(cams[i].Gain)
             filename=filename.replace(".","_")
-            if cal_or_dark.lower() == "radcal":
-                filename= "Current"+current.replace(".","_").zfill(6)+"-"+filename
-            filename = color+"-"+cal_or_dark+"-"+filename
+            filename= "Dark"+"-"+filename
+            filename = color+"-"+"Dark"+"-"+filename
             
             #Image.fromarray(imgs[i]).save(os.path.join(output_dir+"/"+CamNames[i]+"/"+filename)) #Files named based on m
             if type(imgs[i]) != type(None):
@@ -137,11 +126,15 @@ def rad(gain,exposureTime, output_dir):
                 
             else:
                 print("not saved")
-    if not crash:  
+    if not crash:
         for cam in cams:
             cam.stop()
             cam.close()
+    else:
+        print("CRASH")
 
+
+#ensure only one camera is connected to the computer at a time
 [cams,CamNames] = Cal_functions.find_cameras()
 camName = int(CamNames[0])
 #This stops the cameras to ensure the settigns can be changed
@@ -150,18 +143,19 @@ for cam in cams:
     cam.close()
 Month_dir = "Z:Flathead-Aug-2023/"
 Month_output= "Z:Flathead-Aug-2023-Cal/"
-day = "2023-08-14"
 
-for time_dir in os.listdir(Month_dir+day):
-    print(Month_dir+day+"/"+time_dir)
-    for file in os.listdir(Month_dir+day+"/"+time_dir):
-        if file == "Camera_settings.csv":
-            settings = pd.read_csv(Month_dir+day+"/"+time_dir+"/"+file,skiprows=1)
-            gain = settings['Gain'][settings['Name']==camName].tolist()[0]
-            exposure = settings['Exposure'][settings['Name']==camName].tolist()[0]
-            output_dir=Month_output+day+"/"+time_dir+"/"
-            print(settings)
-            print(gain,exposure)
-            print(output_dir)
-            print()
-            rad(gain,exposure,output_dir)
+for day in os.listdir(Month_dir):
+    for time_dir in os.listdir(Month_dir+day):
+        print(Month_dir+day+"/"+time_dir)
+        for file in os.listdir(Month_dir+day+"/"+time_dir):
+            if file == "Camera_settings.csv":
+                settings = pd.read_csv(Month_dir+day+"/"+time_dir+"/"+file,skiprows=1)
+                gain = settings['Gain'][settings['Name']==camName].tolist()[0]
+                exposure = settings['Exposure'][settings['Name']==camName].tolist()[0]
+                output_dir=Month_output+day+"/"+time_dir+"/"
+                print(settings)
+                print(gain,exposure)
+                print(output_dir)
+                print()
+                Dark_cal(exposure,gain,output_dir)
+        

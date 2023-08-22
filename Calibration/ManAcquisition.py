@@ -199,22 +199,23 @@ for cam in cams:
     cam.close()
 Month_dir = "Z:Flathead-Aug-2023/"
 Month_output= "Z:Flathead-Aug-2023-Cal/"
-for day in os.listdir(Month_dir):
-    for time_dir in os.listdir(Month_dir+day):
-        print(Month_dir+day+"/"+time_dir)
-        for file in os.listdir(Month_dir+day+"/"+time_dir):
-            if file == "Camera_settings.csv":
-                print("\n\n\n\n")
-                settings = pd.read_csv(Month_dir+day+"/"+time_dir+"/"+file,skiprows=1)
-                gain = settings['Gain'][settings['Name']==camName].tolist()[0]
-                exposure = settings['Exposure'][settings['Name']==camName].tolist()[0]
-                output_dir=Month_output+day+"/"+time_dir+"/"
-                print(settings)
-                print(gain,exposure)
-                man(gain,exposure)
-                print(output_dir)
-                print()
-                #polarization_cal(exposure,gain,output_dir)
+day = "2023-08-14"
+for time_dir in os.listdir(Month_dir+day):
+    #print(Month_dir+day+"/"+time_dir)
+    for file in os.listdir(Month_dir+day+"/"+time_dir):
+        if file == "Camera_settings.csv":
+            print("\n\n\n\n")
+            settings = pd.read_csv(Month_dir+day+"/"+time_dir+"/"+file,skiprows=1)
+            gain = settings['Gain'][settings['Name']==camName].tolist()[0]
+            exposure = settings['Exposure'][settings['Name']==camName].tolist()[0]
+            output_dir=Month_output+day+"/"+time_dir+"/"
+            print(settings)
+            print(gain,exposure)
+            print(output_dir)
+            man(gain,exposure)
+            
+            print()
+            #polarization_cal(exposure,gain,output_dir)
 #enering the time between taking images
 
 
