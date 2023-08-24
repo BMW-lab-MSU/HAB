@@ -15,6 +15,7 @@ import statsmodels.api as sm
 
 
 def rad_cal_check(DIR):
+    print(DIR)
     plt.figure()
     #photos = np.empty([2048,2448,len(deg_pol)])
     to_remove="nPolCalGETIimgDegr_Rdut"
@@ -35,6 +36,7 @@ def rad_cal_check(DIR):
     currents.sort()
     print(currents)
     img_avg = np.zeros(len(currents))
+    photos = np.zeros([2048,2448,len(currents)])
     
     for image_file in os.listdir(DIR):
         if "radcal" in image_file.lower():
@@ -50,10 +52,13 @@ def rad_cal_check(DIR):
                 idx = currents.index(info[1])
             
                 if not np.mean(image_np.astype(float))>60000:
-                    img_avg[idx] = img_avg[idx]+np.mean(image_np.astype(float))/(len(currents))
+                    img_avg[idx] = img_avg[idx]+np.mean(image_np.astype(float))/5
+                    photos[idx] = photos[idx]+(image_np/5)
                 else:
                     img_avg= np.delete(img_avg,idx)
+                    photos=np.delete(photos,idx)
                     currents.pop(idx)
+                    print("didnt work")
 
     #plt.scatter(currents, img_avg)
     x = (np.array(currents)*1E-6)
@@ -72,7 +77,7 @@ def rad_cal_check(DIR):
     return(R_sq)
 
 
-DIR = "/mnt/data/HAB/2023-08-04-CAL/"
+DIR = "/mnt/data/HAB/Flathead-Aug-2023-Cal/2023-08-16/10-42/"
 R_sq = []
 for folder in os.listdir(DIR):
     if not "." in folder:
