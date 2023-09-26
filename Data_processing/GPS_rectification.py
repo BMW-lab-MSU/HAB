@@ -10,6 +10,14 @@ import numpy as np
 import math
 from pysolar.solar import get_azimuth,get_altitude
 import datetime as dt
+import os
+import Processing_functions as PF
+
+def GPS_pixelwise(lat,lon,bearing,h,viewing_ang=45,pixel_width = 1224,pixel_hight = 1024, delta_pix_ang = 0.0153655):
+    Bearing_angle_change = (np.arange(pixel_width)*delta_pix_ang)
+    viewing_angle_change = (np.arange(pixel_hight)*delta_pix_ang)
+    bottom_left_pix = 
+
 
 def GPS_correction(CurGPS,NxtGPS,Altitude,lakeAlt = 882.0):
     CurGPS_np = np.array(CurGPS)
@@ -33,49 +41,69 @@ def GPS_correction(CurGPS,NxtGPS,Altitude,lakeAlt = 882.0):
     vec[1] /= np.cos(np.deg2rad(NxtGPS[0]))
     point = vec+CurGPS_np
 
-    return(point[0],point[1])
+    return(point[0],point[1],compass_bearing)
     
     
 
-directory = "/mnt/data/HAB/Flathead-July-2023/2023-07-24/Flight_1/"
-df = pd.read_csv(directory+"GPS_DATA.csv")
 
-LakeSurfaceAltitude_m = 882
-Lat_pic = []
-Lon_pic = []
-for i in range(len(df["Frame"])-1):
-    CurGPS = [df["Latitude"][i],df["Longitude"][i]]
-
-    DroneAltitude_m = df["Altitude[m]"][i]
+def Image_loc_aund_ang(directory,h=1000, GPS_direction=165,tol = 10):
+    df = pd.read_csv(directory+"GPS_DATA.csv")
     
-    NxtGPS = [df["Latitude"][i+1],df["Longitude"][i+1]]
+    LakeSurfaceAltitude_m = 882
+    Lat_pic = []
+    Lon_pic = []
+    Bearing = []
+    for i in range(len(df["Frame"])-1):
+        CurGPS = [df["Latitude"][i],df["Longitude"][i]]
     
-    [lat,lon] = GPS_correction(CurGPS, NxtGPS, DroneAltitude_m)
-    Lat_pic.append(lat)
-    Lon_pic.append(lon)
-
-Lat_pic.append("")
-Lon_pic.append("")
-
-df["Image_Latitude"] = Lat_pic
-df["Image_Longitude"] = Lon_pic
-
-
+        DroneAltitude_m = df["Altitude[m]"][i]
+        
+        NxtGPS = [df["Latitude"][i+1],df["Longitude"][i+1]]
+        
+        [lat,lon, direction] = GPS_correction(CurGPS, NxtGPS, DroneAltitude_m)
+        Lat_pic.append(lat)
+        Lon_pic.append(lon)
+        Bearing.append(direction)
     
-
-date = []
-for time in df["UTC"]:
-    TIME = [int(i) for i in time.split("-")]
-    date.append(dt.datetime(TIME[0],TIME[1],TIME[2],TIME[3],TIME[4],TIME[5],tzinfo=dt.timezone.utc))
-
-azimuth = []
-altitude = []
-for i in range(len(date)):
-    altitude.append(get_altitude(df["Latitude"][i],df["Longitude"][i],date[i]))
-    azimuth.append(get_azimuth(df["Latitude"][i],df["Longitude"][i],date[i]))
+    Lat_pic.append("")
+    Lon_pic.append("")
+    Bearing.append(Bearing[-1])
     
-df["Sun_Altitude"] = altitude
-df["Sun_Azimuth"] = azimuth
-df.to_csv(directory+"GPS_DATA.csv")
-print(df)
+    df["Image_Latitude"] = Lat_pic
+    df["Image_Longitude"] = Lon_pic
+    df["Bearing"] = Bearing
+    
+    
+        
+    
+    date = []
+    for time in df["UTC"]:
+        if type(0.0) != type(time):
+            TIME = [int(i) for i in time.split("-")]
+            date.append(dt.datetime(TIME[0],TIME[1],TIME[2],TIME[3],TIME[4],TIME[5],tzinfo=dt.timezone.utc))
+        else: date.append(date[-1])
+    azimuth = []
+    altitude = []
+    for i in range(len(date)):
+        altitude.append(get_altitude(df["Latitude"][i],df["Longitude"][i],date[i]))
+        azimuth.append(get_azimuth(df["Latitude"][i],df["Longitude"][i],date[i]))
+        
+    df["Sun_Altitude"] = altitude
+    df["Sun_Azimuth"] = azimuth
+    
+    cond = (((df["Altitude[m]"].shift()>h) & ((GPS_direction-tol)<=df["Bearing"].shift()) & (df["Bearing"].shift()<=(GPS_direction+tol)))&(df["Bearing"] != 180.0))
+    df_trunk = df[(((df["Altitude[m]"]>h) & (((GPS_direction-tol)<=df["Bearing"]) & (df["Bearing"]<=(GPS_direction+tol))|(cond)) & (df["Bearing"] != 180.0)))]
+    df_trunk.to_csv(directory+"GPS_DATA_USEABLE.csv")
+    
+    To_get_rid = df["Frame"][(((df["Altitude[m]"]<h) | (((GPS_direction-tol)>=df["Bearing"]) | (df["Bearing"]>=(GPS_direction+tol)))) & (~ cond))]
+    PF.Remove_frames(directory, To_get_rid)
 
+months = ["/mnt/2TB/HAB/Flathead-July-2023/","/mnt/2TB/HAB/Flathead-Aug-2023/"]
+for month in months:
+    for day in os.listdir(month):
+        day_dir = month+day
+        for time in os.listdir(day_dir):
+            if not ".csv" in time:
+                time_dir = day_dir+"/"+time+"/"
+                print(time_dir)
+                Image_loc_aund_ang(time_dir)

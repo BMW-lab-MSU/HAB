@@ -7,7 +7,7 @@ from multiprocessing import Pool
 #converts all np images in a folder to png and creates a gif
 
 def numpy_to_png(camera):
-    directory = "/mnt/data/HAB/Flathead-July-2023/2023-07-26/Flight_1"
+    directory = "/mnt/2TB/HAB/Flathead-Aug-2023/2023-08-14/10-58"
     dir = directory+"/220277"+camera
     png_dir = directory+"/pngs"+camera
     #makes png directorys
