@@ -192,7 +192,7 @@ def Remove_frames(DIR,to_remove):
         os.system("rm "+DIR+"22027772/"+rmv_frame+"*")
         os.system("rm "+DIR+"22027773/"+rmv_frame+"*")
         os.system("rm "+DIR+"22027758-Calibrated/"+rmv_frame+"*")
-        os.system("rm "+DIR+"22027772-calibrated/"+rmv_frame+"*")
+        os.system("rm "+DIR+"22027772-Calibrated/"+rmv_frame+"*")
         os.system("rm "+DIR+"22027773-Calibrated/"+rmv_frame+"*")
     
       

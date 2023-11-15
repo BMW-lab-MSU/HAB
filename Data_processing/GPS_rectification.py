@@ -13,11 +13,6 @@ import datetime as dt
 import os
 import Processing_functions as PF
 
-def GPS_pixelwise(lat,lon,bearing,h,viewing_ang=45,pixel_width = 1224,pixel_hight = 1024, delta_pix_ang = 0.0153655):
-    Bearing_angle_change = (np.arange(pixel_width)*delta_pix_ang)
-    viewing_angle_change = (np.arange(pixel_hight)*delta_pix_ang)
-    bottom_left_pix = 
-
 
 def GPS_correction(CurGPS,NxtGPS,Altitude,lakeAlt = 882.0):
     CurGPS_np = np.array(CurGPS)

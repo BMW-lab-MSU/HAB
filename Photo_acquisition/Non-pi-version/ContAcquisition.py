@@ -7,10 +7,10 @@ import simple_pyspin
 import numpy as np
 from datetime import date
 import PySpin
-import adafruit_gps
+
 import serial
 import csv
-import RPi.GPIO as GPIO
+
 import HAB_classes
 
 
@@ -23,13 +23,6 @@ exposure_time = [3503,3503,3503] #microseconds
 
 cams = HAB_classes.CAMERAS()
 
-gps = HAB_classes.GPS()
-
-
-#initializes the button and LED
-GPIO.setup(31,GPIO.IN,pull_up_down = GPIO.PUD_DOWN)
-GPIO.setup(40,GPIO.OUT)
-GPIO.output(40,GPIO.HIGH)
 
 
 
@@ -50,8 +43,7 @@ print("init_time:",time.time()-starttime)
 # It is set up such that a new folder with the date/flight# is created
 #first the gps is used to see if it can find the current date
 time.sleep(0.1)
-print("past gps")
-gps.get_dir()
+
 
 #makes a new directory with the flight number (just += 1 from the previous)
 cams.DIR_Flights(gps.output_dir)

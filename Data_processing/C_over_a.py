@@ -30,15 +30,17 @@ def c_over_a(DIR):
             image_npz = np.load(DIR+"/"+time+"/"+Image)
             DoLP = image_npz["DoLP"]
             c_over_a = p[3]*(DoLP**3)+p[2]*(DoLP**2)+p[1]*(DoLP)+p[0]
+            c_over_a[c_over_a < 0] = np.nan
             to_save = DIR+"/"+time+"/"+Image.split("-")[0]
             to_save = to_save.replace("/mnt/2TB/HAB/site_locations/2023-","")
-            df.loc[len(df.index)] = [to_save,cams[index], np.mean(c_over_a)] 
-            plt.figure()
-            plt.pcolormesh(DoLP,cmap=plt.cm.turbo,vmin=0, vmax=1)
-            plt.gca().invert_yaxis()
-            plt.colorbar()
-            plt.title(to_save+" :"+cams[index])
-            plt.tight_layout()
+            df.loc[len(df.index)] = [to_save,cams[index], np.nanmean(c_over_a)] 
+            if 2<np.nanmean(c_over_a)<7:
+                plt.figure()
+                plt.pcolormesh(c_over_a,cmap=plt.cm.turbo,vmin=2, vmax=10)
+                plt.gca().invert_yaxis()
+                plt.colorbar()
+                plt.title(to_save+": "+cams[index]+" nm (average value = " + str(np.round(np.nanmean(c_over_a),2))+")")
+                plt.tight_layout()
 
                     
                     
