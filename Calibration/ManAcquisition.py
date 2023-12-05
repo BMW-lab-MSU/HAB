@@ -4,7 +4,9 @@ Created on Jun 25 2023
 @author: Flint Morgan
 """
 #ManAcquisition.py
-#this script is for calibration purposes and will make a file labeled with the date and CAL
+#this script is for calibration purposes
+#loops over month and uses the exposure and gain in the camera settings so you can set the sphere irradiance correctly
+#Does not save anything
 
 from simple_pyspin import Camera
 import time
@@ -91,10 +93,6 @@ def man(gain,exposureTime):
     print("init_time:",time.time()-starttime)
     
     
-    # Make a directory to save some images
-    # It is set up such that a new folder with the date_CAL/flight# is created
-    
-    
     
     starttime = time.time()
     m = 0
@@ -170,8 +168,7 @@ def man(gain,exposureTime):
         
         pic_numb+=1
         for i in range(len(cams)):
-    
-            #Image.fromarray(imgs[i]).save(os.path.join(output_dir+"/"+CamNames[i]+"/"+filename)) #Files named based on m
+
             if type(imgs[i]) != type(None):
                 raw = imgs[i]
                 I90 = np.mean(raw.astype(float)[::2,::2])
@@ -200,6 +197,7 @@ for cam in cams:
 Month_dir = "Z:Flathead-Aug-2023/"
 Month_output= "Z:Flathead-Aug-2023-Cal/"
 day = "2023-08-14"
+#loops over month and uses the exposure and gain in the camera settings so you can set the sphere irradiance correctly
 for time_dir in os.listdir(Month_dir+day):
     #print(Month_dir+day+"/"+time_dir)
     for file in os.listdir(Month_dir+day+"/"+time_dir):
@@ -216,9 +214,6 @@ for time_dir in os.listdir(Month_dir+day):
             
             print()
             #polarization_cal(exposure,gain,output_dir)
-#enering the time between taking images
 
-
-#this keeps searching for the camera and will not continue if its not there
 
 
