@@ -17,11 +17,7 @@ import PySpin
 #Red 660/671 nm 73
 #green 550nm 72
 
-#Entering the exposure time desired
 
-#gain = 10.721805051364594
-#exposureTime = 14407.615384615385
-#important because the calibrations are done with specific filters
 
 
 def Dark_cal(exposureTime,gain,output_dir):
@@ -144,6 +140,8 @@ for cam in cams:
 Month_dir = "Z:Flathead-Aug-2023/"
 Month_output= "Z:Flathead-Aug-2023-Cal/"
 
+
+#loops over the flights in a month and gets a dark for each exposure and gain used
 for day in os.listdir(Month_dir):
     for time_dir in os.listdir(Month_dir+day):
         print(Month_dir+day+"/"+time_dir)
