@@ -21,15 +21,13 @@ import PySpin
 #Red 660/671 nm 73
 #green 550nm 72
 
-#Entering the exposure time desired
 
-#gain = 10.721805051364594
-#exposureTime = 14407.615384615385
-#important because the calibrations are done with specific filters
 
 
 def Monochrome_cal(exposureTime,gain,output_dir, wavelengths):
     print("connecting to monochromator...")
+    
+    #cameras and corresponding colors
     Possible_cameras = ["22027758","22027772","22027773"]
     colors = ["440nm","550nm","660nm"]
     MC = Monochromator_class.monochromator()
@@ -80,10 +78,7 @@ def Monochrome_cal(exposureTime,gain,output_dir, wavelengths):
     pic_numb = 0
     MC.Set_wavelength(wavelengths[0])
     time.sleep(2)
-    #This code is similar to what is in cont aquisition, except it takes 5 pictures in a
-    #row and then waits for an input for the next set of images
-    #it is also important to note that this code is currently set up for degrees
-    #which represent the angle of the polarizer, but that can be easily changed
+    #This code is similar to what is in cont aquisition, except it takes 5 pictures in a row to be averaged later
     crash = False
     time.sleep(1)
     cams[0].ExposureAuto = 'Continuous'
@@ -111,6 +106,8 @@ def Monochrome_cal(exposureTime,gain,output_dir, wavelengths):
             print("\nWavelengthto be taken:"+str(wavelengths[index]))
             print("Wavelength of rotation stage:", MC.cur_nm)
             
+            #the camera re sets its exposure, because if it were to remain the same throughout then it would get dark quickly
+            #The expposure is linearly related to the irradiance, so it can be accounted for with a linear interpelation when applied
             cams[0].ExposureAuto = 'Continuous'
             time.sleep(2)
             exposureTime = (cams[0].ExposureTime)
@@ -137,8 +134,6 @@ def Monochrome_cal(exposureTime,gain,output_dir, wavelengths):
                 print("image skipped stopping program")
                 crash = True
                 break
-            #print(imgs[0].shape, imgs[0].dtype)
-            #print("Saving images to: %s" % output_dir)
     
         
         print("After images are taken:",np.round(time.time()-starttime,3))
@@ -160,14 +155,11 @@ def Monochrome_cal(exposureTime,gain,output_dir, wavelengths):
             else:
                 print("not saved")
     if not crash:  
-        Cal_functions.send_text("Pol Cal done", "Calibration of "+CamNames[0]+" complete.")  
         for cam in cams:
             cam.stop()
             cam.close()
         MC.close()
-        Cal_functions.polarization_cal_check(output_dir+"/"+camera)
-    else: 
-        Cal_functions.send_text("Crash", "The program crashed at",wavelengths[index]) 
+
 
 
 #ensure only one camera is connected to the computer at a time
