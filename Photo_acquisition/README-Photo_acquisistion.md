@@ -1,4 +1,4 @@
-# HAB README
+# HAB-Photo_aquisition README
 Last updated Jul 17 2023
 
 The files are as follows:
@@ -6,6 +6,8 @@ The files are as follows:
 ***MAKE SURE TO CHANGE THE GPIO PERMISSIONS OF THE PI OR RUN THE PROGRAM AS ROOT***
 
 ***MAKE SURE TO DOWNLOAD THE CAMERA PYTHON PACKAGE FROM THE FLIR WEBSITE***
+
+Old_contAquisition holds original legacy aquisition python file
 
 ## Photo_aquisition
 
