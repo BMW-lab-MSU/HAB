@@ -13,6 +13,10 @@ import datetime as dt
 import os
 import glob
 import h5py
+import warnings
+import multiprocessing as MP
+import time
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def viewing_pixelwise(bearing,viewing_ang=45,pixel_width = 1224,pixel_hight = 1024, delta_pix_ang = 0.0153655):
     Bearing_angle_change = (np.arange(pixel_width)*delta_pix_ang)
@@ -78,79 +82,96 @@ def Viewing_and_gps(directory, Frame):
 
 
 def Camera_pol(directory, camera, Frame):
-    file_name = glob.glob(directory+camera+"-Calibrated/F00"+str(Frame)+"*")[0]
+    file_name = glob.glob(directory+camera+"-Calibrated/F"+str(int(Frame)).zfill(5)+"*")[0]
     data = np.load(file_name)
+    DoLP = np.sqrt((data["S1"]**2)+(data["S2"]**2))/data["S0"]
     AoP =0.5*np.arctan2(data["S2"],data["S1"])* 180/np.pi
     
-    return(data["S0"],data["S1"],data["S2"],data["DoLP"],AoP)
+    return(data["S0"],data["S1"],data["S2"],DoLP,AoP)
         
         
 def to_h5(Time_DIR,save_dir):
     df = pd.read_csv(Time_DIR+"GPS_DATA_USEABLE.csv")
     for frame in df["Frame"]:
-        i= df.index[df["Frame"]==frame]
-        Frame_name = save_dir+str(i[0]+1).zfill(4)+".h5"
-        hf = h5py.File(Frame_name,"a")
+        try:
+            i= df.index[df["Frame"]==frame]
+            Frame_name = save_dir+str(i[0]+1).zfill(4)+".h5"
+            hf = h5py.File(Frame_name,"a")
+            
+            
+            lat,lon,Pix_bearing,Pix_view = Viewing_and_gps(Time_DIR, frame)
+            hf.create_dataset("Pixel_lat",data=lat)
+            hf.create_dataset("Pixel_lon",data=lon)
+            hf.create_dataset("Pixel_bearing",data=Pix_bearing)
+            hf.create_dataset("Pixel_view",data=Pix_view)
+            
+            Sun_alt = df["Sun_Altitude"][i]
+            hf.create_dataset("Sun_alt",data=Sun_alt)
+            Sun_Azm = df["Sun_Azimuth"][i]
+            hf.create_dataset("Sun_Az",data=Sun_Azm)
+            
+            Drone_lat = df["Latitude"][i]
+            hf.create_dataset("Drone_lat",data=Drone_lat)
+            Drone_lon = df["Longitude"][i]
+            hf.create_dataset("Drone_lon",data=Drone_lon)
+            Drone_alt = df["Altitude[m]"][i]
+            hf.create_dataset("Drone_alt",data=Drone_alt)
+            Time = np.array(df["UTC"][i])
+            hf.create_dataset("UTC",data=Time[0])
+            
+            Blue_S0, Blue_S1, Blue_S2, Blue_DoLP, Blue_AoP = Camera_pol(Time_DIR,"22027758",frame)
+            hf.create_dataset("440nm_S0",data=Blue_S0)
+            hf.create_dataset("440nm_S1",data=Blue_S1)
+            hf.create_dataset("440nm_S2",data=Blue_S2)
+            hf.create_dataset("440nm_DoLP",data=Blue_DoLP)
+            hf.create_dataset("440nm_AoP",data=Blue_AoP)
+            Green_S0, Green_S1, Green_S2, Green_DoLP, Green_AoP = Camera_pol(Time_DIR,"22027772",frame)
+            hf.create_dataset("550nm_S0",data=Green_S0)
+            hf.create_dataset("550nm_S1",data=Green_S1)
+            hf.create_dataset("550nm_S2",data=Green_S2)
+            hf.create_dataset("550nm_DoLP",data=Green_DoLP)
+            hf.create_dataset("550nm_AoP",data=Green_AoP)
+            Red_S0, Red_S1, Red_S2, Red_DoLP, Red_AoP = Camera_pol(Time_DIR,"22027773",frame)
+            hf.create_dataset("660nm_S0",data=Red_S0)
+            hf.create_dataset("660nm_S1",data=Red_S1)
+            hf.create_dataset("660nm_S2",data=Red_S2)
+            hf.create_dataset("660nm_DoLP",data=Red_DoLP)
+            hf.create_dataset("660nm_AoP",data=Red_AoP)
+            
+            
+            
+            
+            hf.close()
+        except:
+            print("Failed:" + Time_DIR+" ",frame)
         
-        
-        lat,lon,Pix_bearing,Pix_view = Viewing_and_gps(Time_DIR, frame)
-        hf.create_dataset("Pixel_lat",data=lat)
-        hf.create_dataset("Pixel_lon",data=lon)
-        hf.create_dataset("Pixel_bearing",data=Pix_bearing)
-        hf.create_dataset("Pixel_view",data=Pix_view)
-        
-        Sun_alt = df["Sun_Altitude"][i]
-        hf.create_dataset("Sun_alt",data=Sun_alt)
-        Sun_Azm = df["Sun_Azimuth"][i]
-        hf.create_dataset("Sin_Az",data=Sun_Azm)
-        
-        Drone_lat = df["Latitude"][i]
-        hf.create_dataset("Drone_lat",data=Drone_lat)
-        Drone_lon = df["Longitude"][i]
-        hf.create_dataset("Drone_lon",data=Drone_lon)
-        Drone_alt = df["Altitude[m]"][i]
-        hf.create_dataset("Drone_alt",data=Drone_alt)
-        Time = np.array(df["UTC"][i])
-        hf.create_dataset("UTC",data=Time[0])
-        
-        Blue_S0, Blue_S1, Blue_S2, Blue_DoLP, Blue_AoP = Camera_pol(Time_DIR,"22027758",frame)
-        hf.create_dataset("440nm_S0",data=Blue_S0)
-        hf.create_dataset("440nm_S1",data=Blue_S1)
-        hf.create_dataset("440nm_S2",data=Blue_S2)
-        hf.create_dataset("440nm_DoLP",data=Blue_DoLP)
-        hf.create_dataset("440nm_AoP",data=Blue_AoP)
-        Green_S0, Green_S1, Green_S2, Green_DoLP, Green_AoP = Camera_pol(Time_DIR,"22027772",frame)
-        hf.create_dataset("550nm_S0",data=Green_S0)
-        hf.create_dataset("550nm_S1",data=Green_S1)
-        hf.create_dataset("550nm_S2",data=Green_S2)
-        hf.create_dataset("550nm_DoLP",data=Green_DoLP)
-        hf.create_dataset("550nm_AoP",data=Green_AoP)
-        Red_S0, Red_S1, Red_S2, Red_DoLP, Red_AoP = Camera_pol(Time_DIR,"22027773",frame)
-        hf.create_dataset("660nm_S0",data=Red_S0)
-        hf.create_dataset("660nm_S1",data=Red_S1)
-        hf.create_dataset("660nm_S2",data=Red_S2)
-        hf.create_dataset("660nm_DoLP",data=Red_DoLP)
-        hf.create_dataset("660nm_AoP",data=Red_AoP)
-        
-        
-        
-        
-        hf.close()
-        
-    
+
+def flight_to_h5(Flight_dir):
+    save_dir = Flight_dir
+    save_dir = save_dir.removeprefix("/mnt/2TB/HAB/Flathead-July-2023/")
+    save_dir = save_dir.removeprefix("/mnt/2TB/HAB/Flathead-Aug-2023/")
+    save_dir = "/mnt/2TB/HAB/HAB_Dataset2/"+save_dir
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    to_h5(Flight_dir,save_dir)
+    print(save_dir)
 
 
-months = ["/mnt/2TB/HAB/Flathead-July-2023/","/mnt/2TB/HAB/Flathead-Aug-2023/"]
-for month in months:
-    for day in os.listdir(month):
-        day_dir = month+day
-        for time in os.listdir(day_dir):
-            if not ".csv" in time:
-                time_dir = day_dir+"/"+time+"/"
-                print(time_dir)
-                save_dir = "/mnt/2TB/HAB/HAB_Dataset/"+day+"/"+time+"/"
-                if not os.path.exists(save_dir):
-                    os.makedirs(save_dir)
-                print(save_dir)
-                to_h5(time_dir,save_dir)
+Jul_dirs = list(set([x[0][:-19] for x in os.walk("/mnt/2TB/HAB/Flathead-July-2023/") if "Calibrated" in x[0]]))
+Aug_dirs = list(set([x[0][:-19] for x in os.walk("/mnt/2TB/HAB/Flathead-Aug-2023/") if "Calibrated" in x[0]]))
+flights = Jul_dirs+Aug_dirs
 
+
+start = time.time()
+
+for camera in flights:
+    flight_to_h5(camera)
+"""
+
+with MP.Pool(MP.cpu_count()-2) as p:
+    p.map(flight_to_h5,flights)
+
+"""
+end = time.time()
+
+print(end-start)

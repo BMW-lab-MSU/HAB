@@ -19,17 +19,15 @@ def rad_eq(photos,lum):
     return(equations)
 
 def rad_app(img, eq):
-    corrected = np.zeros(np.shape(img))
-    for row_idx in range(len(img)):
-        for col_idx in range(len(img[0])):
-            y = img[row_idx,col_idx]
-            m,b = eq[row_idx,col_idx]
-            corrected[row_idx,col_idx]=(y-b)/m
+    m = eq[:,:,0]
+    m[m==0]= m.mean()
+    b = eq[:,:,1]
+    corrected = (img-b)/m
     return(corrected)
 
 
 x = [1,2,3]
-temp = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12]])
+temp = np.array([[0,2,3,4],[5,6,7,8],[9,10,11,12]])
 
 temp2 = temp*15
 temp3 = temp*29
@@ -71,3 +69,41 @@ print(get_current_scale(22027758))
 print(get_current_scale(22027772))
 print(get_current_scale(22027773))
 
+
+from multiprocessing import Process
+
+def f(name,a):
+    print('hello', name,a)
+
+
+p = Process(target=f, args=('bob',10))
+p.start()
+p.join()
+
+from math import sin, cos, sqrt, atan2, radians
+
+# Approximate radius of earth in km
+R = 6373.0
+
+lat1 = radians(47.8759184875073)
+lon1 = radians(-114.03288242073337)
+lat2 = radians(47.875858218942696)
+lon2 = radians(-114.03277982624206)
+
+dlon = lon2 - lon1
+dlat = lat2 - lat1
+
+a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+distance = R * c
+
+print("Result: ", distance)
+print("Should be: ", 10.01 ,"m")
+
+import geopy.distance
+
+coords_1 = (47.8759184875073, -114.03288242073337)
+coords_2 = (47.875858218942696, -114.03277982624206)
+
+print(geopy.distance.great_circle(coords_1, coords_2).m)
