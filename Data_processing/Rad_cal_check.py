@@ -10,6 +10,7 @@ import os
 from scipy import stats
 import multiprocessing as MP
 import time
+import matplotlib.pyplot as plt
 
 def get_current_scale(camera,det_cur=6.3207e-4): 
     #these are chosen beecaues they are the 3db points of the filters
@@ -111,28 +112,35 @@ def rad_cal(DIR):
                     currents.pop(idx)
                     print("didnt work")
 
-    #plt.scatter(currents, img_avg)
+
     CURRENTS = (np.array(currents)*1E-6)
     
     lum = CURRENTS*get_current_scale(camera_name)
-    equation = rad_eq(photos, lum)
-    np.save(DIR+"-RAD.npy",equation)
+    img_avg = np.mean(photos,axis=(1,2))
+    plt.figure()
+    plt.scatter(lum, img_avg)
+    plt.figure()
+    plt.scatter(img_avg,lum)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(lum,img_avg)
+    print(r_value**2)
+    print(intercept)
+    slope, intercept, r_value, p_value, std_err = stats.linregress(img_avg,lum)
+    print(r_value**2)
+    
+    #equation = rad_eq(photos, lum)
+    #np.save(DIR+"-RAD.npy",equation)
 
 
 
 
 Month = "/mnt/data/HAB/Flathead-July-2023-Cal/"
-Threads = np.arange(2,10)
+
 time_taken = []
-DIRs = [x[0] for x in os.walk(Month) if "nm" in x[0]] #DIRs of the cameras
-for thread in Threads:
-    start = time.time()
-    with MP.Pool(thread) as p:
-        p.map(rad_cal,DIRs)
-    end = time.time()
-    TIME_TAKEN_TEMP = end-start
-    time_taken.append(TIME_TAKEN_TEMP)
-    print(TIME_TAKEN_TEMP)
+DIRs = [x[0] for x in os.walk(Month) if "nm" in x[0]][0] #DIRs of the cameras
+
+
+rad_cal(DIRs)
+
 
 """
 for folder in DIRs:
